@@ -2,11 +2,11 @@
 #include <SDL_ttf.h>
 #include <iostream>
 
-const int WINDOW_WIDTH = 480;
+const int WINDOW_WIDTH = 640;
 const int WINDOW_HEIGHT = 480;
 const int PLAYER_SIZE = 20;
 const int BLOCK_SIZE = 20;
-const int PLAYER_SPEED = 1;
+const int PLAYER_SPEED = 2;
 
 SDL_Window* window = NULL;
 SDL_Renderer* renderer = NULL;
@@ -36,8 +36,9 @@ bool init() {
         return false;
     }
 
-    font = TTF_OpenFont("arial.ttf", 24);
-    if (font == NULL) {
+    const std::string fontPath = "../../media/Ac437_IBM_VGA_9x8-2x.ttf";
+    font = TTF_OpenFont(fontPath.c_str(), 24);
+    if (font == nullptr) {
         std::cerr << "Failed to load font! SDL_ttf Error: " << TTF_GetError() << std::endl;
         return false;
     }
@@ -87,26 +88,123 @@ void render() {
 
     // Render blocks as borders
     SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-    SDL_Rect topBorder = { 0, 0, WINDOW_WIDTH, BLOCK_SIZE };
-    SDL_Rect bottomBorder = { 0, WINDOW_HEIGHT - BLOCK_SIZE, WINDOW_WIDTH, BLOCK_SIZE };
-    SDL_Rect leftBorder = { 0, 0, BLOCK_SIZE, WINDOW_HEIGHT };
-    SDL_Rect rightBorder = { WINDOW_WIDTH - BLOCK_SIZE, 0, BLOCK_SIZE, WINDOW_HEIGHT };
-    SDL_RenderFillRect(renderer, &topBorder);
-    SDL_RenderFillRect(renderer, &bottomBorder);
-    SDL_RenderFillRect(renderer, &leftBorder);
-    SDL_RenderFillRect(renderer, &rightBorder);
 
-    // Render player
-    SDL_Color color = { 255, 255, 0 };
-    SDL_Surface* textSurface = TTF_RenderText_Solid(font, ":)", color);
+    // Render top border
+    for (int x = 0; x < WINDOW_WIDTH; x += BLOCK_SIZE) {
+        SDL_Color color = { 255, 255, 255 };
+        char blockChar = 8;
+        SDL_Surface* textSurface = TTF_RenderGlyph_Blended(font, blockChar, color);
+        if (textSurface == nullptr) {
+            std::cerr << "Failed to render text! SDL_ttf Error: " << TTF_GetError() << std::endl;
+            return;
+        }
+        SDL_Texture* textTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
+        if (textTexture == nullptr) {
+            std::cerr << "Failed to create texture from surface! SDL Error: " << SDL_GetError() << std::endl;
+            SDL_FreeSurface(textSurface);
+            return;
+        }
+        SDL_Rect textRect = { x, 0, BLOCK_SIZE, BLOCK_SIZE };
+        SDL_RenderCopy(renderer, textTexture, NULL, &textRect);
+
+        // Clean up resources
+        SDL_FreeSurface(textSurface);
+        SDL_DestroyTexture(textTexture);
+    }
+
+    // Render bottom border
+    for (int x = 0; x < WINDOW_WIDTH; x += BLOCK_SIZE) {
+        SDL_Color color = { 255, 255, 255 };
+        char blockChar = 8;
+        SDL_Surface* textSurface = TTF_RenderGlyph_Blended(font, blockChar, color);
+        if (textSurface == nullptr) {
+            std::cerr << "Failed to render text! SDL_ttf Error: " << TTF_GetError() << std::endl;
+            return;
+        }
+        SDL_Texture* textTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
+        if (textTexture == nullptr) {
+            std::cerr << "Failed to create texture from surface! SDL Error: " << SDL_GetError() << std::endl;
+            SDL_FreeSurface(textSurface);
+            return;
+        }
+        SDL_Rect textRect = { x, WINDOW_HEIGHT - BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE };
+        SDL_RenderCopy(renderer, textTexture, NULL, &textRect);
+
+        // Clean up resources
+        SDL_FreeSurface(textSurface);
+        SDL_DestroyTexture(textTexture);
+    }
+
+    // Render left border
+    for (int y = 0; y < WINDOW_HEIGHT; y += BLOCK_SIZE) {
+        SDL_Color color = { 255, 255, 255 };
+        char blockChar = 8;
+        SDL_Surface* textSurface = TTF_RenderGlyph_Blended(font, blockChar, color);
+        if (textSurface == nullptr) {
+            std::cerr << "Failed to render text! SDL_ttf Error: " << TTF_GetError() << std::endl;
+            return;
+        }
+        SDL_Texture* textTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
+        if (textTexture == nullptr) {
+            std::cerr << "Failed to create texture from surface! SDL Error: " << SDL_GetError() << std::endl;
+            SDL_FreeSurface(textSurface);
+            return;
+        }
+        SDL_Rect textRect = { 0, y, BLOCK_SIZE, BLOCK_SIZE };
+        SDL_RenderCopy(renderer, textTexture, NULL, &textRect);
+
+        // Clean up resources
+        SDL_FreeSurface(textSurface);
+        SDL_DestroyTexture(textTexture);
+    }
+
+    // Render right border
+    for (int y = 0; y < WINDOW_HEIGHT; y += BLOCK_SIZE) {
+        SDL_Color color = { 255, 255, 255 };
+        char blockChar = 8;
+        SDL_Surface* textSurface = TTF_RenderGlyph_Blended(font, blockChar, color);
+        if (textSurface == nullptr) {
+            std::cerr << "Failed to render text! SDL_ttf Error: " << TTF_GetError() << std::endl;
+            return;
+        }
+        SDL_Texture* textTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
+        if (textTexture == nullptr) {
+            std::cerr << "Failed to create texture from surface! SDL Error: " << SDL_GetError() << std::endl;
+            SDL_FreeSurface(textSurface);
+            return;
+        }
+        SDL_Rect textRect = { WINDOW_WIDTH - BLOCK_SIZE, y, BLOCK_SIZE, BLOCK_SIZE };
+        SDL_RenderCopy(renderer, textTexture, NULL, &textRect);
+
+        // Clean up resources
+        SDL_FreeSurface(textSurface);
+        SDL_DestroyTexture(textTexture);
+    }
+
+    // Render player as an ASCII character
+    SDL_Color color = { 255, 255, 255 };
+    char playerChar = 1;
+    SDL_Surface* textSurface = TTF_RenderGlyph_Blended(font, playerChar, color);
+    if (textSurface == nullptr) {
+        std::cerr << "Failed to render text! SDL_ttf Error: " << TTF_GetError() << std::endl;
+        return;
+    }
     SDL_Texture* textTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
+    if (textTexture == nullptr) {
+        std::cerr << "Failed to create texture from surface! SDL Error: " << SDL_GetError() << std::endl;
+        SDL_FreeSurface(textSurface);
+        return;
+    }
     SDL_Rect textRect = { playerRect.x, playerRect.y, PLAYER_SIZE, PLAYER_SIZE };
     SDL_RenderCopy(renderer, textTexture, NULL, &textRect);
+
+    // Clean up resources
     SDL_FreeSurface(textSurface);
     SDL_DestroyTexture(textTexture);
 
     SDL_RenderPresent(renderer);
 }
+
 
 int main(int argc, char* args[]) {
     if (!init()) {
@@ -118,7 +216,8 @@ int main(int argc, char* args[]) {
     while (!quit) {
         handleInput();
         render();
-        SDL_Delay(10); // Add a short delay to control the speed
+        // Add a short delay to control the speed
+        SDL_Delay(10);
     }
 
     close();
