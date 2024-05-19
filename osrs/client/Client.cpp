@@ -1,6 +1,7 @@
 #include <SDL.h>
 #include <SDL_ttf.h>
 #include <iostream>
+#include <string>
 
 const int WINDOW_WIDTH = 640;
 const int WINDOW_HEIGHT = 480;
@@ -17,6 +18,9 @@ float playerPosX = playerRect.x;
 float playerPosY = playerRect.y;
 float playerVelX = 0.0f;
 float playerVelY = 0.0f;
+
+int oreCount = 0;
+float miningSpeed = 100000.0f;
 
 bool init() {
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -66,7 +70,7 @@ bool AABB(const SDL_Rect& rectA, const SDL_Rect& rectB) {
         rectA.y + rectA.h > rectB.y;
 }
 
-void handleInput() {
+void handleInput(float deltaTime) {
     SDL_Event event;
     while (SDL_PollEvent(&event) != 0) {
         if (event.type == SDL_QUIT) {
@@ -91,6 +95,25 @@ void handleInput() {
     }
     if (currentKeyStates[SDL_SCANCODE_D]) {
         playerVelX = PLAYER_SPEED;
+    }
+
+    SDL_Rect rockRect = { (WINDOW_WIDTH / 2) - (BLOCK_SIZE / 2) - 5, (WINDOW_HEIGHT / 2) - (BLOCK_SIZE / 2) - 5, BLOCK_SIZE + 10, BLOCK_SIZE + 10 };
+    // Check if the player is close to the rock and the space key is pressed
+    if (currentKeyStates[SDL_SCANCODE_SPACE] && AABB(playerRect, rockRect)) {
+        static float accumulatedTime = 0.0f;
+        accumulatedTime += deltaTime;
+
+        // Check if the player is close to the rock and the space key is pressed
+        if (currentKeyStates[SDL_SCANCODE_SPACE] && AABB(playerRect, rockRect)) {
+            static float accumulatedTime = 0.0f;
+            accumulatedTime += deltaTime;
+
+            // Check if enough time has passed to mine ore
+            while (accumulatedTime >= (1.0f / miningSpeed)) {
+                oreCount++;
+                accumulatedTime -= (1.0f / miningSpeed);
+            }
+        }
     }
 }
 
@@ -184,6 +207,42 @@ void renderRock() {
     renderText(0x1E, { (WINDOW_WIDTH / 2) - (BLOCK_SIZE / 2), (WINDOW_HEIGHT / 2) - (BLOCK_SIZE / 2), BLOCK_SIZE, BLOCK_SIZE });
 }
 
+void renderOreCounter() {
+    std::string oreText = "Ore: " + std::to_string(oreCount);
+
+    // Set the color for the text
+    SDL_Color textColor = { 255, 255, 255 };
+
+    // Render the text surface
+    SDL_Surface* textSurface = TTF_RenderText_Solid(font, oreText.c_str(), textColor);
+    if (textSurface == nullptr) {
+        std::cerr << "Failed to render text surface! SDL_ttf Error: " << TTF_GetError() << std::endl;
+        return;
+    }
+
+    // Create texture from surface
+    SDL_Texture* textTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
+    if (textTexture == nullptr) {
+        std::cerr << "Failed to create texture from surface! SDL Error: " << SDL_GetError() << std::endl;
+        SDL_FreeSurface(textSurface);
+        return;
+    }
+
+    // Get the width and height of the rendered text
+    int textWidth = textSurface->w;
+    int textHeight = textSurface->h;
+
+    // Set the position and size of the rendered text
+    SDL_Rect destRect = { WINDOW_WIDTH - textWidth - 30, 30, textWidth - 5, textHeight - 5 };
+
+    // Copy texture to renderer
+    SDL_RenderCopy(renderer, textTexture, NULL, &destRect);
+
+    // Clean up
+    SDL_FreeSurface(textSurface);
+    SDL_DestroyTexture(textTexture);
+}
+
 void renderPlayer() {
     renderText(0x01, playerRect);
 }
@@ -197,6 +256,7 @@ void render() {
     renderBorders();
     renderShop();
     renderRock();
+    renderOreCounter();
     renderPlayer();
 
     SDL_RenderPresent(renderer);
@@ -216,7 +276,7 @@ int main(int argc, char* args[]) {
         float deltaTime = (currentTime - lastTime) / 1000.0f;
         lastTime = currentTime;
 
-        handleInput();
+        handleInput(deltaTime);
         movePlayer(deltaTime);
         render();
     }
