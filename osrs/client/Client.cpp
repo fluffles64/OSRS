@@ -1,4 +1,5 @@
 #include <SDL.h>
+#include <SDL_ttf.h>
 #include <iostream>
 
 const int WINDOW_WIDTH = 480;
@@ -9,6 +10,7 @@ const int PLAYER_SPEED = 1;
 
 SDL_Window* window = NULL;
 SDL_Renderer* renderer = NULL;
+TTF_Font* font = NULL;
 SDL_Rect playerRect = { WINDOW_WIDTH / 2 - PLAYER_SIZE / 2, WINDOW_HEIGHT / 2 - PLAYER_SIZE / 2, PLAYER_SIZE, PLAYER_SIZE };
 
 bool init() {
@@ -29,12 +31,25 @@ bool init() {
         return false;
     }
 
+    if (TTF_Init() == -1) {
+        std::cerr << "SDL_ttf could not initialize! SDL_ttf Error: " << TTF_GetError() << std::endl;
+        return false;
+    }
+
+    font = TTF_OpenFont("arial.ttf", 24);
+    if (font == NULL) {
+        std::cerr << "Failed to load font! SDL_ttf Error: " << TTF_GetError() << std::endl;
+        return false;
+    }
+
     return true;
 }
 
 void close() {
+    TTF_CloseFont(font);
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
+    TTF_Quit();
     SDL_Quit();
 }
 
@@ -82,9 +97,13 @@ void render() {
     SDL_RenderFillRect(renderer, &rightBorder);
 
     // Render player
-    SDL_SetRenderDrawColor(renderer, 255, 255, 0, 255);
-    SDL_RenderDrawLine(renderer, playerRect.x + PLAYER_SIZE / 2, playerRect.y + PLAYER_SIZE / 2 - 5, playerRect.x + PLAYER_SIZE / 2, playerRect.y + PLAYER_SIZE / 2 + 5); // Eyes
-    SDL_RenderDrawLine(renderer, playerRect.x + PLAYER_SIZE / 2 - 5, playerRect.y + PLAYER_SIZE / 2, playerRect.x + PLAYER_SIZE / 2 + 5, playerRect.y + PLAYER_SIZE / 2); // Mouth
+    SDL_Color color = { 255, 255, 0 };
+    SDL_Surface* textSurface = TTF_RenderText_Solid(font, ":)", color);
+    SDL_Texture* textTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
+    SDL_Rect textRect = { playerRect.x, playerRect.y, PLAYER_SIZE, PLAYER_SIZE };
+    SDL_RenderCopy(renderer, textTexture, NULL, &textRect);
+    SDL_FreeSurface(textSurface);
+    SDL_DestroyTexture(textTexture);
 
     SDL_RenderPresent(renderer);
 }
