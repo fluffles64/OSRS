@@ -1,5 +1,6 @@
 #include <SDL.h>
 #include <SDL_ttf.h>
+#include <SDL_image.h>
 #include <iostream>
 #include <string>
 
@@ -13,6 +14,7 @@ SDL_Window* window = NULL;
 SDL_Renderer* renderer = NULL;
 TTF_Font* font = NULL;
 SDL_Rect playerRect = { WINDOW_WIDTH / 2 - PLAYER_SIZE / 2 - 60, WINDOW_HEIGHT / 2 - PLAYER_SIZE / 2, PLAYER_SIZE, PLAYER_SIZE };
+SDL_Texture* shopImageTexture = NULL;
 
 float playerPosX = playerRect.x;
 float playerPosY = playerRect.y;
@@ -20,7 +22,9 @@ float playerVelX = 0.0f;
 float playerVelY = 0.0f;
 
 int oreCount = 0;
-float miningSpeed = 100000.0f;
+float miningSpeed = 1.0f;
+bool shopOpen = false;
+bool spacePressed = false;
 
 bool init() {
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -52,15 +56,41 @@ bool init() {
         return false;
     }
 
+    if (!(IMG_Init(IMG_INIT_PNG) & IMG_INIT_PNG)) {
+        std::cerr << "SDL_image could not initialize! SDL_image Error: " << IMG_GetError() << std::endl;
+        return false;
+    }
+
     return true;
 }
 
 void close() {
+    if (shopImageTexture != NULL) {
+        SDL_DestroyTexture(shopImageTexture);
+    }
+
     TTF_CloseFont(font);
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     TTF_Quit();
+    IMG_Quit();
     SDL_Quit();
+}
+
+SDL_Texture* loadTexture(const std::string& path) {
+    SDL_Texture* newTexture = NULL;
+    SDL_Surface* loadedSurface = IMG_Load(path.c_str());
+    if (loadedSurface == NULL) {
+        std::cerr << "Unable to load image " << path << "! SDL_image Error: " << IMG_GetError() << std::endl;
+    }
+    else {
+        newTexture = SDL_CreateTextureFromSurface(renderer, loadedSurface);
+        if (newTexture == NULL) {
+            std::cerr << "Unable to create texture from " << path << "! SDL Error: " << SDL_GetError() << std::endl;
+        }
+        SDL_FreeSurface(loadedSurface);
+    }
+    return newTexture;
 }
 
 bool AABB(const SDL_Rect& rectA, const SDL_Rect& rectB) {
@@ -81,6 +111,40 @@ void handleInput(float deltaTime) {
 
     const Uint8* currentKeyStates = SDL_GetKeyboardState(NULL);
 
+    if (shopOpen) {
+        if (currentKeyStates[SDL_SCANCODE_SPACE] && !spacePressed) {
+            spacePressed = true;
+            shopOpen = false;
+            SDL_DestroyTexture(shopImageTexture);
+            shopImageTexture = NULL;
+        }
+        else if (!currentKeyStates[SDL_SCANCODE_SPACE]) {
+            spacePressed = false;
+        }
+
+        if (currentKeyStates[SDL_SCANCODE_1]) {
+            if(miningSpeed < 10.0f && oreCount >= 15)
+                miningSpeed = 10.0f;
+        }
+        else if (currentKeyStates[SDL_SCANCODE_2]) {
+            if (miningSpeed < 31.4159f && oreCount >= 500)
+                miningSpeed = 31.4159f;
+        }
+        else if (currentKeyStates[SDL_SCANCODE_3]) {
+            if (miningSpeed < 100.0f && oreCount >= 2000)
+                miningSpeed = 100.0f;
+        }
+        else if (currentKeyStates[SDL_SCANCODE_4]) {
+            if (miningSpeed < 1024.0f && oreCount >= 4090)
+                miningSpeed = 1024.0f;
+        }
+        else if (currentKeyStates[SDL_SCANCODE_5]) {
+            if (miningSpeed < 10000.0f && oreCount >= 100000)
+                miningSpeed = 10000.0f;
+        }
+        return;
+    }
+
     playerVelX = 0.0f;
     playerVelY = 0.0f;
 
@@ -97,22 +161,46 @@ void handleInput(float deltaTime) {
         playerVelX = PLAYER_SPEED;
     }
 
+    static Uint32 lastSpacePress = 0;
+    Uint32 currentTicks = SDL_GetTicks();
+
+    SDL_Rect shopRect = { 70 - 5, 30 - 5, 100 + 10, 20 + 10 };
+
+    if (currentKeyStates[SDL_SCANCODE_SPACE] && !spacePressed) {
+        spacePressed = true;
+
+        if (currentTicks - lastSpacePress > 500) {
+            lastSpacePress = currentTicks;
+
+            if (AABB(playerRect, shopRect)) {
+                shopOpen = !shopOpen;
+
+                if (shopOpen) {
+                    shopImageTexture = loadTexture("../../media/shop.png");
+                    if (shopImageTexture == NULL) {
+                        std::cerr << "Failed to load shop image!" << std::endl;
+                        shopOpen = false;
+                    }
+                }
+                else {
+                    SDL_DestroyTexture(shopImageTexture);
+                    shopImageTexture = NULL;
+                }
+            }
+        }
+    }
+    else if (!currentKeyStates[SDL_SCANCODE_SPACE]) {
+        spacePressed = false;
+    }
+
     SDL_Rect rockRect = { (WINDOW_WIDTH / 2) - (BLOCK_SIZE / 2) - 5, (WINDOW_HEIGHT / 2) - (BLOCK_SIZE / 2) - 5, BLOCK_SIZE + 10, BLOCK_SIZE + 10 };
-    // Check if the player is close to the rock and the space key is pressed
     if (currentKeyStates[SDL_SCANCODE_SPACE] && AABB(playerRect, rockRect)) {
         static float accumulatedTime = 0.0f;
         accumulatedTime += deltaTime;
 
-        // Check if the player is close to the rock and the space key is pressed
-        if (currentKeyStates[SDL_SCANCODE_SPACE] && AABB(playerRect, rockRect)) {
-            static float accumulatedTime = 0.0f;
-            accumulatedTime += deltaTime;
-
-            // Check if enough time has passed to mine ore
-            while (accumulatedTime >= (1.0f / miningSpeed)) {
-                oreCount++;
-                accumulatedTime -= (1.0f / miningSpeed);
-            }
+        while (accumulatedTime >= (1.0f / miningSpeed)) {
+            oreCount++;
+            accumulatedTime -= (1.0f / miningSpeed);
         }
     }
 }
@@ -259,6 +347,10 @@ void render() {
     renderOreCounter();
     renderPlayer();
 
+    if (shopOpen && shopImageTexture != NULL) {
+        SDL_RenderCopy(renderer, shopImageTexture, NULL, NULL);
+    }
+
     SDL_RenderPresent(renderer);
 }
 
@@ -277,7 +369,8 @@ int main(int argc, char* args[]) {
         lastTime = currentTime;
 
         handleInput(deltaTime);
-        movePlayer(deltaTime);
+        if(!shopOpen)
+            movePlayer(deltaTime);
         render();
     }
 

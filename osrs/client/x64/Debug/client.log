@@ -1,4 +1,4 @@
 ﻿  Client.cpp
-C:\Users\Fluffles\Documents\GitHub\OSRS\osrs\client\Client.cpp(17,18): warning C4244: 'initializing': conversion from 'int' to 'float', possible loss of data
-C:\Users\Fluffles\Documents\GitHub\OSRS\osrs\client\Client.cpp(18,18): warning C4244: 'initializing': conversion from 'int' to 'float', possible loss of data
+C:\Users\Fluffles\Documents\GitHub\OSRS\osrs\client\Client.cpp(19,18): warning C4244: 'initializing': conversion from 'int' to 'float', possible loss of data
+C:\Users\Fluffles\Documents\GitHub\OSRS\osrs\client\Client.cpp(20,18): warning C4244: 'initializing': conversion from 'int' to 'float', possible loss of data
   client.vcxproj -> C:\Users\Fluffles\Documents\GitHub\OSRS\osrs\x64\Debug\client.exe
