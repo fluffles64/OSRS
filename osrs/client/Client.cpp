@@ -6,12 +6,17 @@ const int WINDOW_WIDTH = 640;
 const int WINDOW_HEIGHT = 480;
 const int PLAYER_SIZE = 20;
 const int BLOCK_SIZE = 20;
-const int PLAYER_SPEED = 2;
+const float PLAYER_SPEED = 200.0f; // Pixels/second
 
 SDL_Window* window = NULL;
 SDL_Renderer* renderer = NULL;
 TTF_Font* font = NULL;
-SDL_Rect playerRect = { WINDOW_WIDTH / 2 - PLAYER_SIZE / 2, WINDOW_HEIGHT / 2 - PLAYER_SIZE / 2, PLAYER_SIZE, PLAYER_SIZE };
+SDL_Rect playerRect = { WINDOW_WIDTH / 2 - PLAYER_SIZE / 2 - 60, WINDOW_HEIGHT / 2 - PLAYER_SIZE / 2, PLAYER_SIZE, PLAYER_SIZE };
+
+float playerPosX = playerRect.x;
+float playerPosY = playerRect.y;
+float playerVelX = 0.0f;
+float playerVelY = 0.0f;
 
 bool init() {
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -19,7 +24,7 @@ bool init() {
         return false;
     }
 
-    window = SDL_CreateWindow("Simple Game", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_SHOWN);
+    window = SDL_CreateWindow("O.S.R.S", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_SHOWN);
     if (window == NULL) {
         std::cerr << "Window could not be created! SDL_Error: " << SDL_GetError() << std::endl;
         return false;
@@ -36,8 +41,8 @@ bool init() {
         return false;
     }
 
-    const std::string fontPath = "../../media/Ac437_IBM_VGA_9x8-2x.ttf";
-    font = TTF_OpenFont(fontPath.c_str(), 24);
+    const std::string fontPath = "../../media/Ac437_IBM_VGA_9x8.ttf";
+    font = TTF_OpenFont(fontPath.c_str(), BLOCK_SIZE);
     if (font == nullptr) {
         std::cerr << "Failed to load font! SDL_ttf Error: " << TTF_GetError() << std::endl;
         return false;
@@ -54,6 +59,13 @@ void close() {
     SDL_Quit();
 }
 
+bool AABB(const SDL_Rect& rectA, const SDL_Rect& rectB) {
+    return rectA.x < rectB.x + rectB.w &&
+        rectA.x + rectA.w > rectB.x &&
+        rectA.y < rectB.y + rectB.h &&
+        rectA.y + rectA.h > rectB.y;
+}
+
 void handleInput() {
     SDL_Event event;
     while (SDL_PollEvent(&event) != 0) {
@@ -64,127 +76,59 @@ void handleInput() {
     }
 
     const Uint8* currentKeyStates = SDL_GetKeyboardState(NULL);
+
+    playerVelX = 0.0f;
+    playerVelY = 0.0f;
+
     if (currentKeyStates[SDL_SCANCODE_W]) {
-        if (playerRect.y > BLOCK_SIZE)
-            playerRect.y -= PLAYER_SPEED;
+        playerVelY = -PLAYER_SPEED;
     }
     if (currentKeyStates[SDL_SCANCODE_S]) {
-        if (playerRect.y + playerRect.h < WINDOW_HEIGHT - BLOCK_SIZE)
-            playerRect.y += PLAYER_SPEED;
+        playerVelY = PLAYER_SPEED;
     }
     if (currentKeyStates[SDL_SCANCODE_A]) {
-        if (playerRect.x > BLOCK_SIZE)
-            playerRect.x -= PLAYER_SPEED;
+        playerVelX = -PLAYER_SPEED;
     }
     if (currentKeyStates[SDL_SCANCODE_D]) {
-        if (playerRect.x + playerRect.w < WINDOW_WIDTH - BLOCK_SIZE)
-            playerRect.x += PLAYER_SPEED;
+        playerVelX = PLAYER_SPEED;
     }
 }
 
-void render() {
-    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-    SDL_RenderClear(renderer);
+void movePlayer(float deltaTime) {
+    float newPosX = playerPosX + playerVelX * deltaTime;
+    float newPosY = playerPosY + playerVelY * deltaTime;
 
-    // Render blocks as borders
-    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-
-    // Render top border
-    for (int x = 0; x < WINDOW_WIDTH; x += BLOCK_SIZE) {
-        SDL_Color color = { 255, 255, 255 };
-        char blockChar = 8;
-        SDL_Surface* textSurface = TTF_RenderGlyph_Blended(font, blockChar, color);
-        if (textSurface == nullptr) {
-            std::cerr << "Failed to render text! SDL_ttf Error: " << TTF_GetError() << std::endl;
-            return;
-        }
-        SDL_Texture* textTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
-        if (textTexture == nullptr) {
-            std::cerr << "Failed to create texture from surface! SDL Error: " << SDL_GetError() << std::endl;
-            SDL_FreeSurface(textSurface);
-            return;
-        }
-        SDL_Rect textRect = { x, 0, BLOCK_SIZE, BLOCK_SIZE };
-        SDL_RenderCopy(renderer, textTexture, NULL, &textRect);
-
-        // Clean up resources
-        SDL_FreeSurface(textSurface);
-        SDL_DestroyTexture(textTexture);
+    // Boundary collision detection
+    if (newPosX < BLOCK_SIZE) {
+        newPosX = BLOCK_SIZE;
+    }
+    if (newPosX > WINDOW_WIDTH - BLOCK_SIZE - PLAYER_SIZE) {
+        newPosX = WINDOW_WIDTH - BLOCK_SIZE - PLAYER_SIZE;
+    }
+    if (newPosY < BLOCK_SIZE) {
+        newPosY = BLOCK_SIZE;
+    }
+    if (newPosY > WINDOW_HEIGHT - BLOCK_SIZE - PLAYER_SIZE) {
+        newPosY = WINDOW_HEIGHT - BLOCK_SIZE - PLAYER_SIZE;
     }
 
-    // Render bottom border
-    for (int x = 0; x < WINDOW_WIDTH; x += BLOCK_SIZE) {
-        SDL_Color color = { 255, 255, 255 };
-        char blockChar = 8;
-        SDL_Surface* textSurface = TTF_RenderGlyph_Blended(font, blockChar, color);
-        if (textSurface == nullptr) {
-            std::cerr << "Failed to render text! SDL_ttf Error: " << TTF_GetError() << std::endl;
-            return;
-        }
-        SDL_Texture* textTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
-        if (textTexture == nullptr) {
-            std::cerr << "Failed to create texture from surface! SDL Error: " << SDL_GetError() << std::endl;
-            SDL_FreeSurface(textSurface);
-            return;
-        }
-        SDL_Rect textRect = { x, WINDOW_HEIGHT - BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE };
-        SDL_RenderCopy(renderer, textTexture, NULL, &textRect);
+    // Shop and rock collision detection
+    SDL_Rect shopRect = { 70, 30, 100, 20 };
+    SDL_Rect rockRect = { (WINDOW_WIDTH / 2) - (BLOCK_SIZE / 2), (WINDOW_HEIGHT / 2) - (BLOCK_SIZE / 2), BLOCK_SIZE, BLOCK_SIZE };
 
-        // Clean up resources
-        SDL_FreeSurface(textSurface);
-        SDL_DestroyTexture(textTexture);
+    if (!AABB({ static_cast<int>(newPosX), static_cast<int>(newPosY), playerRect.w, playerRect.h }, shopRect) &&
+        !AABB({ static_cast<int>(newPosX), static_cast<int>(newPosY), playerRect.w, playerRect.h }, rockRect)) {
+        playerPosX = newPosX;
+        playerPosY = newPosY;
     }
 
-    // Render left border
-    for (int y = 0; y < WINDOW_HEIGHT; y += BLOCK_SIZE) {
-        SDL_Color color = { 255, 255, 255 };
-        char blockChar = 8;
-        SDL_Surface* textSurface = TTF_RenderGlyph_Blended(font, blockChar, color);
-        if (textSurface == nullptr) {
-            std::cerr << "Failed to render text! SDL_ttf Error: " << TTF_GetError() << std::endl;
-            return;
-        }
-        SDL_Texture* textTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
-        if (textTexture == nullptr) {
-            std::cerr << "Failed to create texture from surface! SDL Error: " << SDL_GetError() << std::endl;
-            SDL_FreeSurface(textSurface);
-            return;
-        }
-        SDL_Rect textRect = { 0, y, BLOCK_SIZE, BLOCK_SIZE };
-        SDL_RenderCopy(renderer, textTexture, NULL, &textRect);
+    playerRect.x = static_cast<int>(playerPosX);
+    playerRect.y = static_cast<int>(playerPosY);
+}
 
-        // Clean up resources
-        SDL_FreeSurface(textSurface);
-        SDL_DestroyTexture(textTexture);
-    }
-
-    // Render right border
-    for (int y = 0; y < WINDOW_HEIGHT; y += BLOCK_SIZE) {
-        SDL_Color color = { 255, 255, 255 };
-        char blockChar = 8;
-        SDL_Surface* textSurface = TTF_RenderGlyph_Blended(font, blockChar, color);
-        if (textSurface == nullptr) {
-            std::cerr << "Failed to render text! SDL_ttf Error: " << TTF_GetError() << std::endl;
-            return;
-        }
-        SDL_Texture* textTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
-        if (textTexture == nullptr) {
-            std::cerr << "Failed to create texture from surface! SDL Error: " << SDL_GetError() << std::endl;
-            SDL_FreeSurface(textSurface);
-            return;
-        }
-        SDL_Rect textRect = { WINDOW_WIDTH - BLOCK_SIZE, y, BLOCK_SIZE, BLOCK_SIZE };
-        SDL_RenderCopy(renderer, textTexture, NULL, &textRect);
-
-        // Clean up resources
-        SDL_FreeSurface(textSurface);
-        SDL_DestroyTexture(textTexture);
-    }
-
-    // Render player as an ASCII character
+void renderText(Uint16 unicodeValue, SDL_Rect rect) {
     SDL_Color color = { 255, 255, 255 };
-    char playerChar = 1;
-    SDL_Surface* textSurface = TTF_RenderGlyph_Blended(font, playerChar, color);
+    SDL_Surface* textSurface = TTF_RenderGlyph_Solid(font, unicodeValue, color);
     if (textSurface == nullptr) {
         std::cerr << "Failed to render text! SDL_ttf Error: " << TTF_GetError() << std::endl;
         return;
@@ -195,16 +139,68 @@ void render() {
         SDL_FreeSurface(textSurface);
         return;
     }
-    SDL_Rect textRect = { playerRect.x, playerRect.y, PLAYER_SIZE, PLAYER_SIZE };
-    SDL_RenderCopy(renderer, textTexture, NULL, &textRect);
+    SDL_RenderCopy(renderer, textTexture, NULL, &rect);
 
-    // Clean up resources
     SDL_FreeSurface(textSurface);
     SDL_DestroyTexture(textTexture);
+}
+
+void renderBorders() {
+    for (int x = 0; x < WINDOW_WIDTH; x += BLOCK_SIZE) {
+        renderText(0x2593, { x, 0, BLOCK_SIZE, BLOCK_SIZE });
+    }
+    for (int x = 0; x < WINDOW_WIDTH; x += BLOCK_SIZE) {
+        renderText(0x2593, { x, WINDOW_HEIGHT - BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE });
+    }
+    for (int y = 0; y < WINDOW_HEIGHT; y += BLOCK_SIZE) {
+        renderText(0x2593, { 0, y, BLOCK_SIZE, BLOCK_SIZE });
+    }
+    for (int y = 0; y < WINDOW_HEIGHT; y += BLOCK_SIZE) {
+        renderText(0x2593, { WINDOW_WIDTH - BLOCK_SIZE, y, BLOCK_SIZE, BLOCK_SIZE });
+    }
+}
+
+void renderShop() {
+    renderText(0x2502, { 60, 20, BLOCK_SIZE, BLOCK_SIZE });
+    renderText(0x2502, { 70, 20, BLOCK_SIZE, BLOCK_SIZE });
+    renderText(0x01, { 100, 20, BLOCK_SIZE, BLOCK_SIZE });
+    renderText(0x2502, { 150, 20, BLOCK_SIZE, BLOCK_SIZE });
+    renderText(0x2502, { 160, 20, BLOCK_SIZE, BLOCK_SIZE });
+
+    renderText(0x2514, { 60, 40, BLOCK_SIZE, BLOCK_SIZE });
+    renderText(0x2514, { 70, 30, BLOCK_SIZE, BLOCK_SIZE });
+    renderText(0x2518, { 150, 30, BLOCK_SIZE, BLOCK_SIZE });
+    renderText(0x2518, { 160, 40, BLOCK_SIZE, BLOCK_SIZE });
+
+    for (int x = 80; x < 160; x += BLOCK_SIZE) {
+        renderText(0x2500, { x, 30, BLOCK_SIZE, BLOCK_SIZE });
+    }
+    for (int x = 80; x < 160; x += BLOCK_SIZE) {
+        renderText(0x2500, { x, 40, BLOCK_SIZE, BLOCK_SIZE });
+    }
+}
+
+void renderRock() {
+    renderText(0x1E, { (WINDOW_WIDTH / 2) - (BLOCK_SIZE / 2), (WINDOW_HEIGHT / 2) - (BLOCK_SIZE / 2), BLOCK_SIZE, BLOCK_SIZE });
+}
+
+void renderPlayer() {
+    renderText(0x01, playerRect);
+}
+
+void render() {
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+    SDL_RenderClear(renderer);
+
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+
+    renderBorders();
+    renderShop();
+    renderRock();
+    renderPlayer();
 
     SDL_RenderPresent(renderer);
 }
-
 
 int main(int argc, char* args[]) {
     if (!init()) {
@@ -213,11 +209,16 @@ int main(int argc, char* args[]) {
     }
 
     bool quit = false;
+    Uint32 lastTime = SDL_GetTicks();
+
     while (!quit) {
+        Uint32 currentTime = SDL_GetTicks();
+        float deltaTime = (currentTime - lastTime) / 1000.0f;
+        lastTime = currentTime;
+
         handleInput();
+        movePlayer(deltaTime);
         render();
-        // Add a short delay to control the speed
-        SDL_Delay(10);
     }
 
     close();
