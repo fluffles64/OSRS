@@ -1,4 +1,5 @@
 ﻿  Client.cpp
-C:\Users\Fluffles\Documents\GitHub\OSRS\osrs\client\Client.cpp(19,18): warning C4244: 'initializing': conversion from 'int' to 'float', possible loss of data
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.34.31933\include\optional(12): warning STL4038: The contents of <optional> are available only with C++17 or later.
 C:\Users\Fluffles\Documents\GitHub\OSRS\osrs\client\Client.cpp(20,18): warning C4244: 'initializing': conversion from 'int' to 'float', possible loss of data
+C:\Users\Fluffles\Documents\GitHub\OSRS\osrs\client\Client.cpp(21,18): warning C4244: 'initializing': conversion from 'int' to 'float', possible loss of data
   client.vcxproj -> C:\Users\Fluffles\Documents\GitHub\OSRS\osrs\x64\Debug\client.exe

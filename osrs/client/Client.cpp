@@ -3,6 +3,7 @@
 #include <SDL_image.h>
 #include <iostream>
 #include <string>
+#include "../server/common.h"
 
 const int WINDOW_WIDTH = 640;
 const int WINDOW_HEIGHT = 480;
@@ -353,6 +354,11 @@ void render() {
 
     SDL_RenderPresent(renderer);
 }
+
+class OSRS : public tfg::net::client_interface<GameMsg>
+{
+
+};
 
 int main(int argc, char* args[]) {
     if (!init()) {

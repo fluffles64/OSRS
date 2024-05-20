@@ -71,19 +71,19 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);..\..\lib\SDL2-2.30.3\include;..\..\lib\SDL2_ttf-2.22.0\include;..\..\lib\SDL2_image-2.8.2\include</IncludePath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);..\networking;..\..\lib\asio-1.30.2\include;..\..\lib\SDL2-2.30.3\include;..\..\lib\SDL2_ttf-2.22.0\include;..\..\lib\SDL2_image-2.8.2\include</IncludePath>
     <LibraryPath>..\..\lib\SDL2_image-2.8.2\lib\x64;..\..\lib\SDL2-2.30.3\lib\x64;..\..\lib\SDL2_ttf-2.22.0\lib\x64;$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);..\..\lib\SDL2-2.30.3\lib\x64;..\..\lib\SDL2_ttf-2.22.0\lib\x64..\..\lib\SDL2_ttf-2.22.0\lib\x64</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);..\..\lib\SDL2-2.30.3\include;..\..\lib\SDL2_ttf-2.22.0\include;..\..\lib\SDL2_image-2.8.2\include</IncludePath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);..\networking;..\..\lib\asio-1.30.2\include;..\..\lib\SDL2-2.30.3\include;..\..\lib\SDL2_ttf-2.22.0\include;..\..\lib\SDL2_image-2.8.2\include</IncludePath>
     <LibraryPath>..\..\lib\SDL2_image-2.8.2\lib\x64;..\..\lib\SDL2-2.30.3\lib\x64;..\..\lib\SDL2_ttf-2.22.0\lib\x64;$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);..\..\lib\SDL2-2.30.3\lib\x64;..\..\lib\SDL2_ttf-2.22.0\lib\x64..\..\lib\SDL2_ttf-2.22.0\lib\x64</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);..\..\lib\SDL2-2.30.3\include;..\..\lib\SDL2_ttf-2.22.0\include;..\..\lib\SDL2_image-2.8.2\include</IncludePath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);..\networking;..\..\lib\asio-1.30.2\include;..\..\lib\SDL2-2.30.3\include;..\..\lib\SDL2_ttf-2.22.0\include;..\..\lib\SDL2_image-2.8.2\include</IncludePath>
     <LibraryPath>..\..\lib\SDL2_image-2.8.2\lib\x64;..\..\lib\SDL2-2.30.3\lib\x64;..\..\lib\SDL2_ttf-2.22.0\lib\x64;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);..\..\lib\SDL2-2.30.3\lib\x64;..\..\lib\SDL2_ttf-2.22.0\lib\x64..\..\lib\SDL2_ttf-2.22.0\lib\x64</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);..\..\lib\SDL2-2.30.3\include;..\..\lib\SDL2_ttf-2.22.0\include;..\..\lib\SDL2_image-2.8.2\include</IncludePath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);..\networking;..\..\lib\asio-1.30.2\include;..\..\lib\SDL2-2.30.3\include;..\..\lib\SDL2_ttf-2.22.0\include;..\..\lib\SDL2_image-2.8.2\include</IncludePath>
     <LibraryPath>..\..\lib\SDL2_image-2.8.2\lib\x64;..\..\lib\SDL2-2.30.3\lib\x64;..\..\lib\SDL2_ttf-2.22.0\lib\x64;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);..\..\lib\SDL2-2.30.3\lib\x64;..\..\lib\SDL2_ttf-2.22.0\lib\x64..\..\lib\SDL2_ttf-2.22.0\lib\x64</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">

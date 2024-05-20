@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include "../networking/net.h"
 
 enum class GameMsg : uint32_t
 {
@@ -23,7 +24,4 @@ struct sPlayerDescription
 
 	uint32_t nOre = 0;
 	float fMiningSpeed = 1.0f;
-
-	//olc::vf2d vPos;
-	//olc::vf2d vVel;
 };
