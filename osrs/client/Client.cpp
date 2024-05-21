@@ -22,24 +22,112 @@ public:
 	{
 		// TODO: init() here
 
-		mapObjects[0].nUniqueID = 0;
-		mapObjects[0].vPos = { 60.0f, 200.0f };
+		if (Connect("127.0.0.1", 60000))
+		{
+			return true;
+		}
 
-		mapObjects[3453450].nUniqueID = 1234;
-		mapObjects[3453450].vPos = { 70.0f, 200.0f };
-
-		//if (Connect("127.0.0.1", 60000))
-		//{
-		//	return true;
-		//}
-
-		return true;
+		return false;
 	}
 
 	bool OnUserUpdate(float fElapsedTime)
 	{
 		// Check for incoming network messages
+		if (IsConnected()) {
+			while (!Incoming().empty()) {
+				auto msg = Incoming().pop_front().msg;
 
+				switch (msg.header.id)
+				{
+					case(GameMsg::Client_Accepted):
+					{
+						std::cout << "Server accepted client - you're in!\n";
+						tfg::net::message<GameMsg> msg;
+						msg.header.id = GameMsg::Client_RegisterWithServer;
+						// TODO: Might want to also reset ore and mining speed here
+						descPlayer.vPos = { 60.0f, 200.0f };
+						msg << descPlayer;
+						Send(msg);
+						break;
+					}
+
+					case(GameMsg::Client_AssignID):
+					{
+						// Server is assigning us OUR id
+						msg >> nPlayerID;
+						std::cout << "Assigned Client ID = " << nPlayerID << "\n";
+						break;
+					}
+
+					case(GameMsg::Game_AddPlayer):
+					{
+						sPlayerDescription desc;
+						msg >> desc;
+						mapObjects.insert_or_assign(desc.nUniqueID, desc);
+
+						if (desc.nUniqueID == nPlayerID)
+						{
+							// Now we exist in game world
+							bWaitingForConnection = false;
+						}
+						break;
+					}
+
+					case(GameMsg::Game_RemovePlayer):
+					{
+						uint32_t nRemovalID = 0;
+						msg >> nRemovalID;
+						mapObjects.erase(nRemovalID);
+						break;
+					}
+
+					case(GameMsg::Game_UpdatePlayer):
+					{
+						sPlayerDescription desc;
+						msg >> desc;
+						mapObjects.insert_or_assign(desc.nUniqueID, desc);
+						break;
+					}
+				}
+			}
+		}
+
+		// Waiting for connection text until connection is successful
+		if (bWaitingForConnection)
+		{
+			SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+			SDL_RenderClear(renderer);
+
+			SDL_Color textColor = { 255, 255, 255, 255 };
+
+			SDL_Surface* textSurface = TTF_RenderText_Solid(font, "Waiting for connection...", textColor);
+			if (textSurface == nullptr) {
+				return false;
+			}
+
+			SDL_Texture* textTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
+			if (textTexture == nullptr) {
+				SDL_FreeSurface(textSurface);
+				return false;
+			}
+
+			int textWidth = textSurface->w;
+			int textHeight = textSurface->h;
+
+			SDL_FreeSurface(textSurface);
+
+			SDL_Rect textRect;
+			textRect.x = (WINDOW_WIDTH - textWidth) / 2;
+			textRect.y = (WINDOW_HEIGHT - textHeight) / 2;
+			textRect.w = textWidth;
+			textRect.h = textHeight;
+
+			SDL_RenderCopy(renderer, textTexture, nullptr, &textRect);
+			SDL_DestroyTexture(textTexture);
+			SDL_RenderPresent(renderer);
+
+			return true;
+		}
 
 		// Control of Player Object
 		SDL_Event event;
@@ -52,19 +140,53 @@ public:
 		const Uint8* currentKeyStates = SDL_GetKeyboardState(NULL);
 
 		//TODO: add shop and mining functionalities back
+		//if (shopOpen) {
+		//	if (currentKeyStates[SDL_SCANCODE_SPACE] && !spacePressed) {
+		//		spacePressed = true;
+		//		shopOpen = false;
+		//		SDL_DestroyTexture(shopImageTexture);
+		//		shopImageTexture = NULL;
+		//	}
+		//	else if (!currentKeyStates[SDL_SCANCODE_SPACE]) {
+		//		spacePressed = false;
+		//	}
+
+		//	if (currentKeyStates[SDL_SCANCODE_1]) {
+		//		if (mapObjects[nPlayerID].fMiningSpeed < 10.0f && mapObjects[nPlayerID].nOreCount >= 15)
+		//			mapObjects[nPlayerID].fMiningSpeed = 10.0f;
+		//	}
+		//	else if (currentKeyStates[SDL_SCANCODE_2]) {
+		//		if (mapObjects[nPlayerID].fMiningSpeed < 31.4159f && mapObjects[nPlayerID].nOreCount >= 500)
+		//			mapObjects[nPlayerID].fMiningSpeed = 31.4159f;
+		//	}
+		//	else if (currentKeyStates[SDL_SCANCODE_3]) {
+		//		if (mapObjects[nPlayerID].fMiningSpeed < 100.0f && mapObjects[nPlayerID].nOreCount >= 2000)
+		//			mapObjects[nPlayerID].fMiningSpeed = 100.0f;
+		//	}
+		//	else if (currentKeyStates[SDL_SCANCODE_4]) {
+		//		if (mapObjects[nPlayerID].fMiningSpeed < 1024.0f && mapObjects[nPlayerID].nOreCount >= 4090)
+		//			mapObjects[nPlayerID].fMiningSpeed = 1024.0f;
+		//	}
+		//	else if (currentKeyStates[SDL_SCANCODE_5]) {
+		//		if (mapObjects[nPlayerID].fMiningSpeed < 10000.0f && oreCount >= 100000)
+		//			mapObjects[nPlayerID].fMiningSpeed = 10000.0f;
+		//	}
+		//	return;
+		//}
+
 		mapObjects[nPlayerID].vVel = { 0.0f, 0.0f };
 
 		if (currentKeyStates[SDL_SCANCODE_W]) {
-			mapObjects[nPlayerID].vVel += { 0.0f, -1.0f };
+			mapObjects[nPlayerID].vVel += { 0.0f, -200.0f };
 		}
 		if (currentKeyStates[SDL_SCANCODE_S]) {
-			mapObjects[nPlayerID].vVel += { 0.0f, +1.0f };
+			mapObjects[nPlayerID].vVel += { 0.0f, +200.0f };
 		}
 		if (currentKeyStates[SDL_SCANCODE_A]) {
-			mapObjects[nPlayerID].vVel += { -1.0f, 0.0f };
+			mapObjects[nPlayerID].vVel += { -200.0f, 0.0f };
 		}
 		if (currentKeyStates[SDL_SCANCODE_D]) {
-			mapObjects[nPlayerID].vVel += { +1.0f, 0.0f };
+			mapObjects[nPlayerID].vVel += { +200.0f, 0.0f };
 		}
 
 		if (mapObjects[nPlayerID].vVel.mag2() > 0)

@@ -105,7 +105,7 @@ struct sPlayerDescription
 	uint32_t nAvatarID = 0;
 	uint32_t nSize = 20;
 
-	uint32_t nOre = 0;
+	uint32_t nOreCount = 0;
 	float fMiningSpeed = 1.0f;
 
 	sVector2 vPos;

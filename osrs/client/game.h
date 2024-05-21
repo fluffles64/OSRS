@@ -53,7 +53,7 @@ bool init() {
         return false;
     }
 
-    const std::string fontPath = "../../media/Ac437_IBM_VGA_9x8.ttf";
+    const std::string fontPath = "../../../media/Ac437_IBM_VGA_9x8.ttf";
     font = TTF_OpenFont(fontPath.c_str(), BLOCK_SIZE);
     if (font == nullptr) {
         std::cerr << "Failed to load font! SDL_ttf Error: " << TTF_GetError() << std::endl;
