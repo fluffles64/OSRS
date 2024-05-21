@@ -300,6 +300,7 @@ int main(int argc, char* args[]) {
 
 	bool quit = false;
 	Uint32 lastTime = SDL_GetTicks();
+	int frameCount = 0;
 
 	const int FPS = 144;
 	const int frameDelay = 1000 / FPS;
@@ -317,6 +318,14 @@ int main(int argc, char* args[]) {
 
 		if (frameDelay > frameTime) {
 			SDL_Delay(frameDelay - frameTime);
+		}
+
+		// Calculate FPS
+		frameCount++;
+		if (frameCount % 100 == 0) {
+			float averageFPS = 1000.0f / (SDL_GetTicks() - lastTime);
+			std::string windowTitle = "O.S.R.S | FPS: " + std::to_string(static_cast<int>(averageFPS));
+			SDL_SetWindowTitle(window, windowTitle.c_str());
 		}
 	}
 	close();

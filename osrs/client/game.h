@@ -49,6 +49,14 @@ bool init() {
         return false;
     }
 
+    // Load icon image
+    SDL_Surface* iconSurface = IMG_Load("../../../media/icon.png");
+    if (iconSurface == NULL) {
+        std::cerr << "Failed to load icon image! SDL_Error: " << SDL_GetError() << std::endl;
+        return false;
+    }
+    SDL_SetWindowIcon(window, iconSurface);
+
     if (TTF_Init() == -1) {
         std::cerr << "SDL_ttf could not initialize! SDL_ttf Error: " << TTF_GetError() << std::endl;
         return false;
