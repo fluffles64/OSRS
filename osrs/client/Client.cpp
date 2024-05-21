@@ -30,7 +30,7 @@ public:
 		return false;
 	}
 
-	bool OnUserUpdate(float fElapsedTime)
+	bool OnUserUpdate(float deltaTime)
 	{
 		// Check for incoming network messages
 		if (IsConnected()) {
@@ -138,54 +138,85 @@ public:
 			}
 		}
 		const Uint8* currentKeyStates = SDL_GetKeyboardState(NULL);
+		SDL_Rect playerRect = { (int)mapObjects[nPlayerID].vPos.x, (int)mapObjects[nPlayerID].vPos.y, BLOCK_SIZE, BLOCK_SIZE };
 
-		//TODO: add shop and mining functionalities back
-		//if (shopOpen) {
-		//	if (currentKeyStates[SDL_SCANCODE_SPACE] && !spacePressed) {
-		//		spacePressed = true;
-		//		shopOpen = false;
-		//		SDL_DestroyTexture(shopImageTexture);
-		//		shopImageTexture = NULL;
-		//	}
-		//	else if (!currentKeyStates[SDL_SCANCODE_SPACE]) {
-		//		spacePressed = false;
-		//	}
+		// Shop logic
+		if (currentKeyStates[SDL_SCANCODE_SPACE] && !spacePressed) {
+			spacePressed = true;
 
-		//	if (currentKeyStates[SDL_SCANCODE_1]) {
-		//		if (mapObjects[nPlayerID].fMiningSpeed < 10.0f && mapObjects[nPlayerID].nOreCount >= 15)
-		//			mapObjects[nPlayerID].fMiningSpeed = 10.0f;
-		//	}
-		//	else if (currentKeyStates[SDL_SCANCODE_2]) {
-		//		if (mapObjects[nPlayerID].fMiningSpeed < 31.4159f && mapObjects[nPlayerID].nOreCount >= 500)
-		//			mapObjects[nPlayerID].fMiningSpeed = 31.4159f;
-		//	}
-		//	else if (currentKeyStates[SDL_SCANCODE_3]) {
-		//		if (mapObjects[nPlayerID].fMiningSpeed < 100.0f && mapObjects[nPlayerID].nOreCount >= 2000)
-		//			mapObjects[nPlayerID].fMiningSpeed = 100.0f;
-		//	}
-		//	else if (currentKeyStates[SDL_SCANCODE_4]) {
-		//		if (mapObjects[nPlayerID].fMiningSpeed < 1024.0f && mapObjects[nPlayerID].nOreCount >= 4090)
-		//			mapObjects[nPlayerID].fMiningSpeed = 1024.0f;
-		//	}
-		//	else if (currentKeyStates[SDL_SCANCODE_5]) {
-		//		if (mapObjects[nPlayerID].fMiningSpeed < 10000.0f && oreCount >= 100000)
-		//			mapObjects[nPlayerID].fMiningSpeed = 10000.0f;
-		//	}
-		//	return;
-		//}
+			if (shopOpen) {
+				// Close the shop if it's already open
+				shopOpen = false;
+				SDL_DestroyTexture(shopImageTexture);
+				shopImageTexture = NULL;
+			}
+			else {
+				// Check if the player is touching the shop
+				SDL_Rect shopRect = { 70 - 5, 30 - 5, 100 + 10, 20 + 10 };
 
+				if (AABB(playerRect, shopRect)) {
+					shopOpen = true;
+					shopImageTexture = loadTexture("../../../media/shop.png");
+					if (shopImageTexture == NULL) {
+						std::cerr << "Failed to load shop image!" << std::endl;
+						shopOpen = false;
+					}
+				}
+			}
+		}
+		else if (!currentKeyStates[SDL_SCANCODE_SPACE]) {
+			spacePressed = false;
+		}
+
+		// Adjust mining speed when the shop is open
+		if (shopOpen) {
+			if (currentKeyStates[SDL_SCANCODE_1]) {
+				if (miningSpeed < 10.0f && oreCount >= 15)
+					miningSpeed = 10.0f;
+			}
+			else if (currentKeyStates[SDL_SCANCODE_2]) {
+				if (miningSpeed < 31.4159f && oreCount >= 500)
+					miningSpeed = 31.4159f;
+			}
+			else if (currentKeyStates[SDL_SCANCODE_3]) {
+				if (miningSpeed < 100.0f && oreCount >= 2000)
+					miningSpeed = 100.0f;
+			}
+			else if (currentKeyStates[SDL_SCANCODE_4]) {
+				if (miningSpeed < 1024.0f && oreCount >= 4090)
+					miningSpeed = 1024.0f;
+			}
+			else if (currentKeyStates[SDL_SCANCODE_5]) {
+				if (miningSpeed < 10000.0f && oreCount >= 100000)
+					miningSpeed = 10000.0f;
+			}
+		}
+
+		// Rock mining
+		SDL_Rect rockRect = { (WINDOW_WIDTH / 2) - (BLOCK_SIZE / 2) - 5, (WINDOW_HEIGHT / 2) - (BLOCK_SIZE / 2) - 5, BLOCK_SIZE + 10, BLOCK_SIZE + 10 };
+		if (currentKeyStates[SDL_SCANCODE_SPACE] && AABB(playerRect, rockRect)) {
+			static float accumulatedTime = 0.0f;
+			accumulatedTime += deltaTime;
+
+			while (accumulatedTime >= (1.0f / miningSpeed)) {
+				oreCount++;
+				accumulatedTime -= (1.0f / miningSpeed);
+			}
+		}
+
+		// Player movement
 		mapObjects[nPlayerID].vVel = { 0.0f, 0.0f };
 
-		if (currentKeyStates[SDL_SCANCODE_W]) {
+		if (currentKeyStates[SDL_SCANCODE_W] && !shopOpen) {
 			mapObjects[nPlayerID].vVel += { 0.0f, -200.0f };
 		}
-		if (currentKeyStates[SDL_SCANCODE_S]) {
+		if (currentKeyStates[SDL_SCANCODE_S] && !shopOpen) {
 			mapObjects[nPlayerID].vVel += { 0.0f, +200.0f };
 		}
-		if (currentKeyStates[SDL_SCANCODE_A]) {
+		if (currentKeyStates[SDL_SCANCODE_A] && !shopOpen) {
 			mapObjects[nPlayerID].vVel += { -200.0f, 0.0f };
 		}
-		if (currentKeyStates[SDL_SCANCODE_D]) {
+		if (currentKeyStates[SDL_SCANCODE_D] && !shopOpen) {
 			mapObjects[nPlayerID].vVel += { +200.0f, 0.0f };
 		}
 
@@ -195,7 +226,7 @@ public:
 		// Update objects locally
 		for (auto& object : mapObjects)
 		{
-			sVector2 vPotentialPosition = object.second.vPos + object.second.vVel * fElapsedTime;
+			sVector2 vPotentialPosition = object.second.vPos + object.second.vVel * deltaTime;
 
 			if (vPotentialPosition.x < BLOCK_SIZE) {
 				vPotentialPosition.x = BLOCK_SIZE;
@@ -267,11 +298,23 @@ int main(int argc, char* args[]) {
 	bool quit = false;
 	Uint32 lastTime = SDL_GetTicks();
 
+	const int FPS = 144;
+	const int frameDelay = 1000 / FPS;
+
 	while (!quit) {
+		Uint32 frameStart = SDL_GetTicks();
+
 		Uint32 currentTime = SDL_GetTicks();
 		float deltaTime = (currentTime - lastTime) / 1000.0f;
 		lastTime = currentTime;
+
 		demo.OnUserUpdate(deltaTime);
+
+		Uint32 frameTime = SDL_GetTicks() - frameStart;
+
+		if (frameDelay > frameTime) {
+			SDL_Delay(frameDelay - frameTime);
+		}
 	}
 	close();
 	return 0;
