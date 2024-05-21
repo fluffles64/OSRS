@@ -41,11 +41,13 @@ public:
 				{
 					case(GameMsg::Client_Accepted):
 					{
-						std::cout << "Server accepted client - you're in!\n";
+						std::cout << "Server accepted client - Welcome!\n";
 						tfg::net::message<GameMsg> msg;
 						msg.header.id = GameMsg::Client_RegisterWithServer;
 						// TODO: Might want to also reset ore and mining speed here
 						descPlayer.vPos = { 60.0f, 200.0f };
+						descPlayer.fMiningSpeed = 1.0f;
+						descPlayer.nOreCount = 0;
 						msg << descPlayer;
 						Send(msg);
 						break;
@@ -171,24 +173,24 @@ public:
 		// Adjust mining speed when the shop is open
 		if (shopOpen) {
 			if (currentKeyStates[SDL_SCANCODE_1]) {
-				if (miningSpeed < 10.0f && oreCount >= 15)
-					miningSpeed = 10.0f;
+				if (mapObjects[nPlayerID].fMiningSpeed < 10.0f && mapObjects[nPlayerID].nOreCount >= 15)
+					mapObjects[nPlayerID].fMiningSpeed = 10.0f;
 			}
 			else if (currentKeyStates[SDL_SCANCODE_2]) {
-				if (miningSpeed < 31.4159f && oreCount >= 500)
-					miningSpeed = 31.4159f;
+				if (mapObjects[nPlayerID].fMiningSpeed < 31.4159f && mapObjects[nPlayerID].nOreCount >= 500)
+					mapObjects[nPlayerID].fMiningSpeed = 31.4159f;
 			}
 			else if (currentKeyStates[SDL_SCANCODE_3]) {
-				if (miningSpeed < 100.0f && oreCount >= 2000)
-					miningSpeed = 100.0f;
+				if (mapObjects[nPlayerID].fMiningSpeed < 100.0f && mapObjects[nPlayerID].nOreCount >= 2000)
+					mapObjects[nPlayerID].fMiningSpeed = 100.0f;
 			}
 			else if (currentKeyStates[SDL_SCANCODE_4]) {
-				if (miningSpeed < 1024.0f && oreCount >= 4090)
-					miningSpeed = 1024.0f;
+				if (mapObjects[nPlayerID].fMiningSpeed < 1024.0f && mapObjects[nPlayerID].nOreCount >= 4090)
+					mapObjects[nPlayerID].fMiningSpeed = 1024.0f;
 			}
 			else if (currentKeyStates[SDL_SCANCODE_5]) {
-				if (miningSpeed < 10000.0f && oreCount >= 100000)
-					miningSpeed = 10000.0f;
+				if (mapObjects[nPlayerID].fMiningSpeed < 10000.0f && mapObjects[nPlayerID].nOreCount >= 100000)
+					mapObjects[nPlayerID].fMiningSpeed = 10000.0f;
 			}
 		}
 
@@ -198,9 +200,9 @@ public:
 			static float accumulatedTime = 0.0f;
 			accumulatedTime += deltaTime;
 
-			while (accumulatedTime >= (1.0f / miningSpeed)) {
-				oreCount++;
-				accumulatedTime -= (1.0f / miningSpeed);
+			while (accumulatedTime >= (1.0f / mapObjects[nPlayerID].fMiningSpeed)) {
+				mapObjects[nPlayerID].nOreCount++;
+				accumulatedTime -= (1.0f / mapObjects[nPlayerID].fMiningSpeed);
 			}
 		}
 
@@ -260,8 +262,9 @@ public:
 		SDL_RenderClear(renderer);
 		SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
 
-		// Render world
+		// Render world and ore count
 		renderWorld();
+		renderOreCounter(mapObjects[nPlayerID].nOreCount);
 
 		// Render objects
 		for (auto& object : mapObjects)
@@ -269,7 +272,7 @@ public:
 			// TODO: do the rect thing from before here too
 			//renderPlayer();
 			// WARNING: careful with the int cast, check it later
-			renderText(0x01, { (int)object.second.vPos.x, (int)object.second.vPos.y, BLOCK_SIZE, BLOCK_SIZE });
+			renderText(0x01, { (int)object.second.vPos.x, (int)object.second.vPos.y, BLOCK_SIZE, BLOCK_SIZE }, object.second.nColor);
 		}
 
 		// Render image

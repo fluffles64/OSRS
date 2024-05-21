@@ -7,10 +7,44 @@ class Server : public tfg::net::server_interface<GameMsg>
 public:
 	Server(uint16_t nPort) : tfg::net::server_interface<GameMsg>(nPort)
 	{
+		InitializeColors();
 	}
 
 	std::unordered_map<uint32_t, sPlayerDescription> m_mapPlayerRoster;
 	std::vector<uint32_t> m_vGarbageIDs;
+
+private:
+	std::vector<Color> m_vAvailableColors;
+	std::unordered_map<uint32_t, Color> m_mapPlayerColors;
+
+	void InitializeColors() {
+		m_vAvailableColors = {
+			{255, 0, 0}, {0, 255, 0}, {0, 0, 255}, {255, 255, 0},
+			{255, 0, 255}, {0, 255, 255}, {128, 0, 0}, {0, 128, 0},
+			{0, 0, 128}, {128, 128, 0}, {128, 0, 128}, {0, 128, 128},
+			{192, 192, 192}, {128, 128, 128}, {64, 64, 64}
+		};
+	}
+
+	Color AssignColor() {
+		if (m_vAvailableColors.empty()) {
+			// Default to white if no colors are available
+			return { 255, 255, 255 };
+		}
+
+		// Shuffle the available colors
+		std::random_shuffle(m_vAvailableColors.begin(), m_vAvailableColors.end());
+
+		// Take the last color from the shuffled list
+		Color color = m_vAvailableColors.back();
+		m_vAvailableColors.pop_back();
+
+		return color;
+	}
+
+	void ReleaseColor(Color color) {
+		m_vAvailableColors.push_back(color);
+	}
 
 protected:
 	bool OnClientConnect(std::shared_ptr<tfg::net::connection<GameMsg>> client) override
@@ -40,6 +74,7 @@ protected:
 			{
 				auto& pd = m_mapPlayerRoster[client->GetID()];
 				std::cout << "[UNGRACEFUL REMOVAL]:" + std::to_string(pd.nUniqueID) + "\n";
+				ReleaseColor(pd.nColor);
 				m_mapPlayerRoster.erase(client->GetID());
 				m_vGarbageIDs.push_back(client->GetID());
 			}
@@ -69,6 +104,7 @@ protected:
 				sPlayerDescription desc;
 				msg >> desc;
 				desc.nUniqueID = client->GetID();
+				desc.nColor = AssignColor();
 				m_mapPlayerRoster.insert_or_assign(desc.nUniqueID, desc);
 
 				tfg::net::message<GameMsg> msgSendID;

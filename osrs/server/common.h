@@ -84,8 +84,14 @@ struct sVector2 {
 	}
 };
 
-enum class GameMsg : uint32_t
-{
+struct Color {
+	uint8_t r, g, b;
+
+	Color(uint8_t red = 0, uint8_t green = 0, uint8_t blue = 0)
+		: r(red), g(green), b(blue) {}
+};
+
+enum class GameMsg : uint32_t {
 	Server_GetStatus,
 	Server_GetPing,
 
@@ -99,11 +105,10 @@ enum class GameMsg : uint32_t
 	Game_UpdatePlayer,
 };
 
-struct sPlayerDescription
-{
+struct sPlayerDescription {
 	uint32_t nUniqueID = 0;
-	uint32_t nAvatarID = 0;
 	uint32_t nSize = 20;
+	Color nColor;
 
 	uint32_t nOreCount = 0;
 	float fMiningSpeed = 1.0f;

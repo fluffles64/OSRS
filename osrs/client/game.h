@@ -4,6 +4,7 @@
 #include <SDL_image.h>
 #include <iostream>
 #include <string>
+#include "../server/common.h"
 
 #pragma region Variables
 const int WINDOW_WIDTH = 640;
@@ -120,6 +121,33 @@ void renderText(Uint16 unicodeValue, SDL_Rect rect) {
     SDL_DestroyTexture(textTexture);
 }
 
+SDL_Color colorToSDLColor(const Color& color) {
+    SDL_Color sdlColor;
+    sdlColor.r = color.r;
+    sdlColor.g = color.g;
+    sdlColor.b = color.b;
+    sdlColor.a = 255;
+    return sdlColor;
+}
+
+void renderText(Uint16 unicodeValue, SDL_Rect rect, Color color) {
+    SDL_Surface* textSurface = TTF_RenderGlyph_Solid(font, unicodeValue, colorToSDLColor(color));
+    if (textSurface == nullptr) {
+        std::cerr << "Failed to render text! SDL_ttf Error: " << TTF_GetError() << std::endl;
+        return;
+    }
+    SDL_Texture* textTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
+    if (textTexture == nullptr) {
+        std::cerr << "Failed to create texture from surface! SDL Error: " << SDL_GetError() << std::endl;
+        SDL_FreeSurface(textSurface);
+        return;
+    }
+    SDL_RenderCopy(renderer, textTexture, NULL, &rect);
+
+    SDL_FreeSurface(textSurface);
+    SDL_DestroyTexture(textTexture);
+}
+
 void renderBorders() {
     for (int x = 0; x < WINDOW_WIDTH; x += BLOCK_SIZE) {
         renderText(0x2593, { x, 0, BLOCK_SIZE, BLOCK_SIZE });
@@ -159,7 +187,7 @@ void renderRock() {
     renderText(0x1E, { (WINDOW_WIDTH / 2) - (BLOCK_SIZE / 2), (WINDOW_HEIGHT / 2) - (BLOCK_SIZE / 2), BLOCK_SIZE, BLOCK_SIZE });
 }
 
-void renderOreCounter() {
+void renderOreCounter(uint32_t oreCount) {
     std::string oreText = "Ore: " + std::to_string(oreCount);
 
     // Set the color for the text
@@ -199,7 +227,6 @@ void renderWorld() {
     renderBorders();
     renderShop();
     renderRock();
-    renderOreCounter();
 }
 
 void renderPlayer() {
