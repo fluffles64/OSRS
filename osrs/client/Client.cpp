@@ -24,6 +24,16 @@ private:
 	Mix_Chunk* oreObtainedSound3 = nullptr;
 	Mix_Chunk* oreObtainedSound4 = nullptr;
 	Mix_Chunk* levelupSound = nullptr;
+	Mix_Chunk* shopOpenSound = nullptr;
+	Mix_Chunk* shopCloseSound = nullptr;
+	Mix_Chunk* haggleSound1 = nullptr;
+	Mix_Chunk* haggleSound2 = nullptr;
+	Mix_Chunk* haggleSound3 = nullptr;
+	bool key1Pressed = false;
+	bool key2Pressed = false;
+	bool key3Pressed = false;
+	bool key4Pressed = false;
+	bool key5Pressed = false;
 
 public:
 	bool OnUserCreate()
@@ -61,18 +71,54 @@ public:
 			std::cerr << "Failed to load ore obtained sound effect! SDL_mixer Error: " << Mix_GetError() << std::endl;
 			return false;
 		}
+
 		levelupSound = Mix_LoadWAV("../../../media/sound/levelup.wav");
 		if (levelupSound == nullptr) {
 			std::cerr << "Failed to load ore obtained sound effect! SDL_mixer Error: " << Mix_GetError() << std::endl;
 			return false;
 		}
 
-		Mix_VolumeChunk(miningSound, MIX_MAX_VOLUME / 1.5f); // 75% volume
+		shopOpenSound = Mix_LoadWAV("../../../media/sound/chestopen.wav");
+		if (shopOpenSound == nullptr) {
+			std::cerr << "Failed to load ore obtained sound effect! SDL_mixer Error: " << Mix_GetError() << std::endl;
+			return false;
+		}
+
+		shopCloseSound = Mix_LoadWAV("../../../media/sound/chestclosed.wav");
+		if (shopCloseSound == nullptr) {
+			std::cerr << "Failed to load ore obtained sound effect! SDL_mixer Error: " << Mix_GetError() << std::endl;
+			return false;
+		}
+
+		haggleSound1 = Mix_LoadWAV("../../../media/sound/haggle1.wav");
+		if (haggleSound1 == nullptr) {
+			std::cerr << "Failed to load ore obtained sound effect! SDL_mixer Error: " << Mix_GetError() << std::endl;
+			return false;
+		}
+
+		haggleSound2 = Mix_LoadWAV("../../../media/sound/haggle2.wav");
+		if (haggleSound2 == nullptr) {
+			std::cerr << "Failed to load ore obtained sound effect! SDL_mixer Error: " << Mix_GetError() << std::endl;
+			return false;
+		}
+
+		haggleSound3 = Mix_LoadWAV("../../../media/sound/haggle3.wav");
+		if (haggleSound3 == nullptr) {
+			std::cerr << "Failed to load ore obtained sound effect! SDL_mixer Error: " << Mix_GetError() << std::endl;
+			return false;
+		}
+
+		Mix_VolumeChunk(miningSound, MIX_MAX_VOLUME / 1.5f); // 66% volume
 		Mix_VolumeChunk(oreObtainedSound1, MIX_MAX_VOLUME / 5); // 20% volume
 		Mix_VolumeChunk(oreObtainedSound2, MIX_MAX_VOLUME / 5); // 20% volume
 		Mix_VolumeChunk(oreObtainedSound3, MIX_MAX_VOLUME / 5); // 20% volume
 		Mix_VolumeChunk(oreObtainedSound4, MIX_MAX_VOLUME / 5); // 20% volume
-		Mix_VolumeChunk(levelupSound, MIX_MAX_VOLUME / 10); // 20% volume
+		Mix_VolumeChunk(levelupSound, MIX_MAX_VOLUME / 10); // 10% volume
+		Mix_VolumeChunk(shopOpenSound, MIX_MAX_VOLUME / 5); // 10% volume
+		Mix_VolumeChunk(shopCloseSound, MIX_MAX_VOLUME / 10); // 10% volume
+		Mix_VolumeChunk(haggleSound1, MIX_MAX_VOLUME / 5); // 20% volume
+		Mix_VolumeChunk(haggleSound2, MIX_MAX_VOLUME / 5); // 20% volume
+		Mix_VolumeChunk(haggleSound3, MIX_MAX_VOLUME / 5); // 20% volume
 
 		if (Connect("127.0.0.1", 60000))
 		{
@@ -203,6 +249,7 @@ public:
 				shopOpen = false;
 				SDL_DestroyTexture(shopImageTexture);
 				shopImageTexture = NULL;
+				Mix_PlayChannel(-1, shopCloseSound, 0);
 			}
 			else {
 				// Check if the player is touching the shop
@@ -211,6 +258,7 @@ public:
 				if (AABB(playerRect, shopRect)) {
 					shopOpen = true;
 					shopImageTexture = loadTexture("../../../media/shop.png");
+					Mix_PlayChannel(-1, shopOpenSound, 0);
 					if (shopImageTexture == NULL) {
 						std::cerr << "Failed to load shop image!" << std::endl;
 						shopOpen = false;
@@ -224,40 +272,92 @@ public:
 
 		// Adjust mining speed when the shop is open
 		if (shopOpen) {
+			int randomSoundIndex = rand() % 3;
+			Mix_Chunk* haggleSounds[3] = { haggleSound1, haggleSound2, haggleSound3 };
+
 			if (currentKeyStates[SDL_SCANCODE_1]) {
-				if (mapObjects[nPlayerID].fMiningSpeed < 10.0f && mapObjects[nPlayerID].nOreCount >= 15) {
-					mapObjects[nPlayerID].fMiningSpeed = 10.0f;
-					mapObjects[nPlayerID].nOreCount = 0;
-					Mix_PlayChannel(-1, levelupSound, 0);
+				if (!key1Pressed) {
+					key1Pressed = true;
+					if (mapObjects[nPlayerID].fMiningSpeed < 10.0f && mapObjects[nPlayerID].nOreCount >= 15) {
+						mapObjects[nPlayerID].fMiningSpeed = 10.0f;
+						mapObjects[nPlayerID].nOreCount = 0;
+						Mix_PlayChannel(-1, levelupSound, 0);
+					}
+					else {
+						Mix_PlayChannel(-1, haggleSounds[randomSoundIndex], 0);
+					}
 				}
 			}
-			else if (currentKeyStates[SDL_SCANCODE_2]) {
-				if (mapObjects[nPlayerID].fMiningSpeed < 31.4159f && mapObjects[nPlayerID].nOreCount >= 500) {
-					mapObjects[nPlayerID].fMiningSpeed = 31.4159f;
-					mapObjects[nPlayerID].nOreCount = 0;
-					Mix_PlayChannel(-1, levelupSound, 0);
+			else {
+				key1Pressed = false;
+			}
+
+			if (currentKeyStates[SDL_SCANCODE_2]) {
+				if (!key2Pressed) {
+					key2Pressed = true;
+					if (mapObjects[nPlayerID].fMiningSpeed < 31.4159f && mapObjects[nPlayerID].nOreCount >= 500) {
+						mapObjects[nPlayerID].fMiningSpeed = 31.4159f;
+						mapObjects[nPlayerID].nOreCount = 0;
+						Mix_PlayChannel(-1, levelupSound, 0);
+					}
+					else {
+						Mix_PlayChannel(-1, haggleSounds[randomSoundIndex], 0);
+					}
 				}
 			}
-			else if (currentKeyStates[SDL_SCANCODE_3]) {
-				if (mapObjects[nPlayerID].fMiningSpeed < 100.0f && mapObjects[nPlayerID].nOreCount >= 2000) {
-					mapObjects[nPlayerID].fMiningSpeed = 100.0f;
-					mapObjects[nPlayerID].nOreCount = 0;
-					Mix_PlayChannel(-1, levelupSound, 0);
+			else {
+				key2Pressed = false;
+			}
+
+			if (currentKeyStates[SDL_SCANCODE_3]) {
+				if (!key3Pressed) {
+					key3Pressed = true;
+					if (mapObjects[nPlayerID].fMiningSpeed < 100.0f && mapObjects[nPlayerID].nOreCount >= 2000) {
+						mapObjects[nPlayerID].fMiningSpeed = 100.0f;
+						mapObjects[nPlayerID].nOreCount = 0;
+						Mix_PlayChannel(-1, levelupSound, 0);
+					}
+					else {
+						Mix_PlayChannel(-1, haggleSounds[randomSoundIndex], 0);
+					}
 				}
 			}
-			else if (currentKeyStates[SDL_SCANCODE_4]) {
-				if (mapObjects[nPlayerID].fMiningSpeed < 1024.0f && mapObjects[nPlayerID].nOreCount >= 4090) {
-					mapObjects[nPlayerID].fMiningSpeed = 1024.0f;
-					mapObjects[nPlayerID].nOreCount = 0;
-					Mix_PlayChannel(-1, levelupSound, 0);
+			else {
+				key3Pressed = false;
+			}
+
+			if (currentKeyStates[SDL_SCANCODE_4]) {
+				if (!key4Pressed) {
+					key4Pressed = true;
+					if (mapObjects[nPlayerID].fMiningSpeed < 1024.0f && mapObjects[nPlayerID].nOreCount >= 4090) {
+						mapObjects[nPlayerID].fMiningSpeed = 1024.0f;
+						mapObjects[nPlayerID].nOreCount = 0;
+						Mix_PlayChannel(-1, levelupSound, 0);
+					}
+					else {
+						Mix_PlayChannel(-1, haggleSounds[randomSoundIndex], 0);
+					}
 				}
 			}
-			else if (currentKeyStates[SDL_SCANCODE_5]) {
-				if (mapObjects[nPlayerID].fMiningSpeed < 10000.0f && mapObjects[nPlayerID].nOreCount >= 100000) {
-					mapObjects[nPlayerID].fMiningSpeed = 10000.0f;
-					mapObjects[nPlayerID].nOreCount = 0;
-					Mix_PlayChannel(-1, levelupSound, 0);
+			else {
+				key4Pressed = false;
+			}
+
+			if (currentKeyStates[SDL_SCANCODE_5]) {
+				if (!key5Pressed) {
+					key5Pressed = true;
+					if (mapObjects[nPlayerID].fMiningSpeed < 10000.0f && mapObjects[nPlayerID].nOreCount >= 100000) {
+						mapObjects[nPlayerID].fMiningSpeed = 10000.0f;
+						mapObjects[nPlayerID].nOreCount = 0;
+						Mix_PlayChannel(-1, levelupSound, 0);
+					}
+					else {
+						Mix_PlayChannel(-1, haggleSounds[randomSoundIndex], 0);
+					}
 				}
+			}
+			else {
+				key5Pressed = false;
 			}
 		}
 
