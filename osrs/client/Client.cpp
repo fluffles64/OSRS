@@ -10,118 +10,13 @@
 
 class OSRS : public tfg::net::client_interface<GameMsg>
 {
-private:
-    std::unordered_map<uint32_t, sPlayerDescription> mapObjects;
-	uint32_t nPlayerID = 0;
-	sPlayerDescription descPlayer;
-	bool bWaitingForConnection = true;
-
-	float deltaTime = 0.0f;
-
-	Mix_Chunk* miningSound = nullptr;
-	Mix_Chunk* oreObtainedSound1 = nullptr;
-	Mix_Chunk* oreObtainedSound2 = nullptr;
-	Mix_Chunk* oreObtainedSound3 = nullptr;
-	Mix_Chunk* oreObtainedSound4 = nullptr;
-	Mix_Chunk* levelupSound = nullptr;
-	Mix_Chunk* shopOpenSound = nullptr;
-	Mix_Chunk* shopCloseSound = nullptr;
-	Mix_Chunk* haggleSound1 = nullptr;
-	Mix_Chunk* haggleSound2 = nullptr;
-	Mix_Chunk* haggleSound3 = nullptr;
-	bool key1Pressed = false;
-	bool key2Pressed = false;
-	bool key3Pressed = false;
-	bool key4Pressed = false;
-	bool key5Pressed = false;
-
 public:
 	bool OnUserCreate()
 	{
-		// Seed the random number generator
-		srand(static_cast<unsigned int>(time(nullptr)));
-		// TODO: init() here
-		// Load sound effects
-		miningSound = Mix_LoadWAV("../../../media/sound/breakingStone.wav");
-		if (miningSound == nullptr) {
-			std::cerr << "Failed to load mining sound effect! SDL_mixer Error: " << Mix_GetError() << std::endl;
+		if (!init()) {
 			return false;
 		}
-
-		oreObtainedSound1 = Mix_LoadWAV("../../../media/sound/stone1.wav");
-		if (oreObtainedSound1 == nullptr) {
-			std::cerr << "Failed to load ore obtained sound effect! SDL_mixer Error: " << Mix_GetError() << std::endl;
-			return false;
-		}
-
-		oreObtainedSound2 = Mix_LoadWAV("../../../media/sound/stone2.wav");
-		if (oreObtainedSound2 == nullptr) {
-			std::cerr << "Failed to load ore obtained sound effect! SDL_mixer Error: " << Mix_GetError() << std::endl;
-			return false;
-		}
-
-		oreObtainedSound3 = Mix_LoadWAV("../../../media/sound/stone3.wav");
-		if (oreObtainedSound3 == nullptr) {
-			std::cerr << "Failed to load ore obtained sound effect! SDL_mixer Error: " << Mix_GetError() << std::endl;
-			return false;
-		}
-
-		oreObtainedSound4 = Mix_LoadWAV("../../../media/sound/stone4.wav");
-		if (oreObtainedSound4 == nullptr) {
-			std::cerr << "Failed to load ore obtained sound effect! SDL_mixer Error: " << Mix_GetError() << std::endl;
-			return false;
-		}
-
-		levelupSound = Mix_LoadWAV("../../../media/sound/levelup.wav");
-		if (levelupSound == nullptr) {
-			std::cerr << "Failed to load ore obtained sound effect! SDL_mixer Error: " << Mix_GetError() << std::endl;
-			return false;
-		}
-
-		shopOpenSound = Mix_LoadWAV("../../../media/sound/chestopen.wav");
-		if (shopOpenSound == nullptr) {
-			std::cerr << "Failed to load ore obtained sound effect! SDL_mixer Error: " << Mix_GetError() << std::endl;
-			return false;
-		}
-
-		shopCloseSound = Mix_LoadWAV("../../../media/sound/chestclosed.wav");
-		if (shopCloseSound == nullptr) {
-			std::cerr << "Failed to load ore obtained sound effect! SDL_mixer Error: " << Mix_GetError() << std::endl;
-			return false;
-		}
-
-		haggleSound1 = Mix_LoadWAV("../../../media/sound/haggle1.wav");
-		if (haggleSound1 == nullptr) {
-			std::cerr << "Failed to load ore obtained sound effect! SDL_mixer Error: " << Mix_GetError() << std::endl;
-			return false;
-		}
-
-		haggleSound2 = Mix_LoadWAV("../../../media/sound/haggle2.wav");
-		if (haggleSound2 == nullptr) {
-			std::cerr << "Failed to load ore obtained sound effect! SDL_mixer Error: " << Mix_GetError() << std::endl;
-			return false;
-		}
-
-		haggleSound3 = Mix_LoadWAV("../../../media/sound/haggle3.wav");
-		if (haggleSound3 == nullptr) {
-			std::cerr << "Failed to load ore obtained sound effect! SDL_mixer Error: " << Mix_GetError() << std::endl;
-			return false;
-		}
-
-		Mix_VolumeChunk(miningSound, MIX_MAX_VOLUME / 1.5f); // 66% volume
-		Mix_VolumeChunk(oreObtainedSound1, MIX_MAX_VOLUME / 5); // 20% volume
-		Mix_VolumeChunk(oreObtainedSound2, MIX_MAX_VOLUME / 5); // 20% volume
-		Mix_VolumeChunk(oreObtainedSound3, MIX_MAX_VOLUME / 5); // 20% volume
-		Mix_VolumeChunk(oreObtainedSound4, MIX_MAX_VOLUME / 5); // 20% volume
-		Mix_VolumeChunk(levelupSound, MIX_MAX_VOLUME / 10); // 10% volume
-		Mix_VolumeChunk(shopOpenSound, MIX_MAX_VOLUME / 5); // 10% volume
-		Mix_VolumeChunk(shopCloseSound, MIX_MAX_VOLUME / 10); // 10% volume
-		Mix_VolumeChunk(haggleSound1, MIX_MAX_VOLUME / 5); // 20% volume
-		Mix_VolumeChunk(haggleSound2, MIX_MAX_VOLUME / 5); // 20% volume
-		Mix_VolumeChunk(haggleSound3, MIX_MAX_VOLUME / 5); // 20% volume
-
-		if (Connect("127.0.0.1", 60000))
-		{
+		if (Connect("127.0.0.1", 60000)) {
 			return true;
 		}
 
@@ -142,7 +37,6 @@ public:
 						std::cout << "Server accepted client - Welcome!\n";
 						tfg::net::message<GameMsg> msg;
 						msg.header.id = GameMsg::Client_RegisterWithServer;
-						// TODO: Might want to also reset ore and mining speed here
 						descPlayer.vPos = { 60.0f, 200.0f };
 						descPlayer.fMiningSpeed = 1.0f;
 						descPlayer.nOreCount = 0;
@@ -446,10 +340,6 @@ public:
 				!AABB({ static_cast<int>(vPotentialPosition.x), static_cast<int>(vPotentialPosition.y), playerRect.w, playerRect.h }, rockRect)) {
 				object.second.vPos = vPotentialPosition;
 			}
-
-			// TODO: may need to add player rect to player description
-			//playerRect.x = static_cast<int>(vPotentialPosition.x);
-			//playerRect.y = static_cast<int>(vPotentialPosition.y);
 		}
 
 		// Clear render
@@ -464,9 +354,6 @@ public:
 		// Render objects
 		for (auto& object : mapObjects)
 		{
-			// TODO: do the rect thing from before here too
-			//renderPlayer();
-			// WARNING: careful with the int cast, check it later
 			renderText(0x01, { (int)object.second.vPos.x, (int)object.second.vPos.y, BLOCK_SIZE, BLOCK_SIZE }, object.second.nColor);
 		}
 
@@ -487,11 +374,11 @@ public:
 
 int main(int argc, char* args[]) {
 	OSRS demo;
-	if (!init()) {
+
+	if (!demo.OnUserCreate()) {
 		std::cerr << "Failed to initialize!" << std::endl;
 		return 1;
 	}
-	demo.OnUserCreate();
 
 	bool quit = false;
 	Uint32 lastTime = SDL_GetTicks();

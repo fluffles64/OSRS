@@ -29,6 +29,31 @@ int oreCount = 0;
 float miningSpeed = 1.0f;
 bool shopOpen = false;
 bool spacePressed = false;
+
+// Networking
+std::unordered_map<uint32_t, sPlayerDescription> mapObjects;
+uint32_t nPlayerID = 0;
+sPlayerDescription descPlayer;
+bool bWaitingForConnection = true;
+float deltaTime = 0.0f;
+
+Mix_Chunk* miningSound = nullptr;
+Mix_Chunk* oreObtainedSound1 = nullptr;
+Mix_Chunk* oreObtainedSound2 = nullptr;
+Mix_Chunk* oreObtainedSound3 = nullptr;
+Mix_Chunk* oreObtainedSound4 = nullptr;
+Mix_Chunk* levelupSound = nullptr;
+Mix_Chunk* shopOpenSound = nullptr;
+Mix_Chunk* shopCloseSound = nullptr;
+Mix_Chunk* haggleSound1 = nullptr;
+Mix_Chunk* haggleSound2 = nullptr;
+Mix_Chunk* haggleSound3 = nullptr;
+
+bool key1Pressed = false;
+bool key2Pressed = false;
+bool key3Pressed = false;
+bool key4Pressed = false;
+bool key5Pressed = false;
 #pragma endregion
 
 #pragma region Init/Close
@@ -50,7 +75,6 @@ bool init() {
         return false;
     }
 
-    // Load icon image
     SDL_Surface* iconSurface = IMG_Load("../../../media/icon.png");
     if (iconSurface == NULL) {
         std::cerr << "Failed to load icon image! SDL_Error: " << SDL_GetError() << std::endl;
@@ -63,15 +87,7 @@ bool init() {
         return false;
     }
 
-    // Initialize SDL_mixer
-    if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048) < 0) {
-        std::cerr << "SDL_mixer could not initialize! SDL_mixer Error: " << Mix_GetError() << std::endl;
-        return false;
-    }
-
-    // Three ../ for the .exe to work, two for the local windows debugger
     const std::string fontPath = "../../../media/Ac437_IBM_VGA_9x8.ttf";
-    //const std::string fontPath = "../../media/Ac437_IBM_VGA_9x8.ttf";
     font = TTF_OpenFont(fontPath.c_str(), BLOCK_SIZE);
     if (font == nullptr) {
         std::cerr << "Failed to load font! SDL_ttf Error: " << TTF_GetError() << std::endl;
@@ -82,6 +98,92 @@ bool init() {
         std::cerr << "SDL_image could not initialize! SDL_image Error: " << IMG_GetError() << std::endl;
         return false;
     }
+
+    if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048) < 0) {
+        std::cerr << "SDL_mixer could not initialize! SDL_mixer Error: " << Mix_GetError() << std::endl;
+        return false;
+    }
+
+    miningSound = Mix_LoadWAV("../../../media/sound/breakingStone.wav");
+    if (miningSound == nullptr) {
+        std::cerr << "Failed to load mining sound effect! SDL_mixer Error: " << Mix_GetError() << std::endl;
+        return false;
+    }
+
+    oreObtainedSound1 = Mix_LoadWAV("../../../media/sound/stone1.wav");
+    if (oreObtainedSound1 == nullptr) {
+        std::cerr << "Failed to load ore obtained sound effect! SDL_mixer Error: " << Mix_GetError() << std::endl;
+        return false;
+    }
+
+    oreObtainedSound2 = Mix_LoadWAV("../../../media/sound/stone2.wav");
+    if (oreObtainedSound2 == nullptr) {
+        std::cerr << "Failed to load ore obtained sound effect! SDL_mixer Error: " << Mix_GetError() << std::endl;
+        return false;
+    }
+
+    oreObtainedSound3 = Mix_LoadWAV("../../../media/sound/stone3.wav");
+    if (oreObtainedSound3 == nullptr) {
+        std::cerr << "Failed to load ore obtained sound effect! SDL_mixer Error: " << Mix_GetError() << std::endl;
+        return false;
+    }
+
+    oreObtainedSound4 = Mix_LoadWAV("../../../media/sound/stone4.wav");
+    if (oreObtainedSound4 == nullptr) {
+        std::cerr << "Failed to load ore obtained sound effect! SDL_mixer Error: " << Mix_GetError() << std::endl;
+        return false;
+    }
+
+    levelupSound = Mix_LoadWAV("../../../media/sound/levelup.wav");
+    if (levelupSound == nullptr) {
+        std::cerr << "Failed to load ore obtained sound effect! SDL_mixer Error: " << Mix_GetError() << std::endl;
+        return false;
+    }
+
+    shopOpenSound = Mix_LoadWAV("../../../media/sound/chestopen.wav");
+    if (shopOpenSound == nullptr) {
+        std::cerr << "Failed to load ore obtained sound effect! SDL_mixer Error: " << Mix_GetError() << std::endl;
+        return false;
+    }
+
+    shopCloseSound = Mix_LoadWAV("../../../media/sound/chestclosed.wav");
+    if (shopCloseSound == nullptr) {
+        std::cerr << "Failed to load ore obtained sound effect! SDL_mixer Error: " << Mix_GetError() << std::endl;
+        return false;
+    }
+
+    haggleSound1 = Mix_LoadWAV("../../../media/sound/haggle1.wav");
+    if (haggleSound1 == nullptr) {
+        std::cerr << "Failed to load ore obtained sound effect! SDL_mixer Error: " << Mix_GetError() << std::endl;
+        return false;
+    }
+
+    haggleSound2 = Mix_LoadWAV("../../../media/sound/haggle2.wav");
+    if (haggleSound2 == nullptr) {
+        std::cerr << "Failed to load ore obtained sound effect! SDL_mixer Error: " << Mix_GetError() << std::endl;
+        return false;
+    }
+
+    haggleSound3 = Mix_LoadWAV("../../../media/sound/haggle3.wav");
+    if (haggleSound3 == nullptr) {
+        std::cerr << "Failed to load ore obtained sound effect! SDL_mixer Error: " << Mix_GetError() << std::endl;
+        return false;
+    }
+
+    Mix_VolumeChunk(miningSound, MIX_MAX_VOLUME / 1.5f); // 66% volume
+    Mix_VolumeChunk(oreObtainedSound1, MIX_MAX_VOLUME / 5); // 20% volume
+    Mix_VolumeChunk(oreObtainedSound2, MIX_MAX_VOLUME / 5); // 20% volume
+    Mix_VolumeChunk(oreObtainedSound3, MIX_MAX_VOLUME / 5); // 20% volume
+    Mix_VolumeChunk(oreObtainedSound4, MIX_MAX_VOLUME / 5); // 20% volume
+    Mix_VolumeChunk(levelupSound, MIX_MAX_VOLUME / 10); // 10% volume
+    Mix_VolumeChunk(shopOpenSound, MIX_MAX_VOLUME / 5); // 10% volume
+    Mix_VolumeChunk(shopCloseSound, MIX_MAX_VOLUME / 10); // 10% volume
+    Mix_VolumeChunk(haggleSound1, MIX_MAX_VOLUME / 5); // 20% volume
+    Mix_VolumeChunk(haggleSound2, MIX_MAX_VOLUME / 5); // 20% volume
+    Mix_VolumeChunk(haggleSound3, MIX_MAX_VOLUME / 5); // 20% volume
+
+    // Seed the random number generator
+    srand(static_cast<unsigned int>(time(nullptr)));
 
     return true;
 }
@@ -255,142 +357,5 @@ bool AABB(const SDL_Rect& rectA, const SDL_Rect& rectB) {
         rectA.x + rectA.w > rectB.x &&
         rectA.y < rectB.y + rectB.h &&
         rectA.y + rectA.h > rectB.y;
-}
-
-void handleInput(float deltaTime) {
-    SDL_Event event;
-    while (SDL_PollEvent(&event) != 0) {
-        if (event.type == SDL_QUIT) {
-            close();
-            exit(0);
-        }
-    }
-
-    const Uint8* currentKeyStates = SDL_GetKeyboardState(NULL);
-
-    if (shopOpen) {
-        if (currentKeyStates[SDL_SCANCODE_SPACE] && !spacePressed) {
-            spacePressed = true;
-            shopOpen = false;
-            SDL_DestroyTexture(shopImageTexture);
-            shopImageTexture = NULL;
-        }
-        else if (!currentKeyStates[SDL_SCANCODE_SPACE]) {
-            spacePressed = false;
-        }
-
-        if (currentKeyStates[SDL_SCANCODE_1]) {
-            if (miningSpeed < 10.0f && oreCount >= 15)
-                miningSpeed = 10.0f;
-        }
-        else if (currentKeyStates[SDL_SCANCODE_2]) {
-            if (miningSpeed < 31.4159f && oreCount >= 500)
-                miningSpeed = 31.4159f;
-        }
-        else if (currentKeyStates[SDL_SCANCODE_3]) {
-            if (miningSpeed < 100.0f && oreCount >= 2000)
-                miningSpeed = 100.0f;
-        }
-        else if (currentKeyStates[SDL_SCANCODE_4]) {
-            if (miningSpeed < 1024.0f && oreCount >= 4090)
-                miningSpeed = 1024.0f;
-        }
-        else if (currentKeyStates[SDL_SCANCODE_5]) {
-            if (miningSpeed < 10000.0f && oreCount >= 100000)
-                miningSpeed = 10000.0f;
-        }
-        return;
-    }
-
-    playerVelX = 0.0f;
-    playerVelY = 0.0f;
-
-    if (currentKeyStates[SDL_SCANCODE_W]) {
-        playerVelY = -PLAYER_SPEED;
-    }
-    if (currentKeyStates[SDL_SCANCODE_S]) {
-        playerVelY = PLAYER_SPEED;
-    }
-    if (currentKeyStates[SDL_SCANCODE_A]) {
-        playerVelX = -PLAYER_SPEED;
-    }
-    if (currentKeyStates[SDL_SCANCODE_D]) {
-        playerVelX = PLAYER_SPEED;
-    }
-
-    static Uint32 lastSpacePress = 0;
-    Uint32 currentTicks = SDL_GetTicks();
-
-    SDL_Rect shopRect = { 70 - 5, 30 - 5, 100 + 10, 20 + 10 };
-
-    if (currentKeyStates[SDL_SCANCODE_SPACE] && !spacePressed) {
-        spacePressed = true;
-
-        if (currentTicks - lastSpacePress > 500) {
-            lastSpacePress = currentTicks;
-
-            if (AABB(playerRect, shopRect)) {
-                shopOpen = !shopOpen;
-
-                if (shopOpen) {
-                    shopImageTexture = loadTexture("../../media/shop.png");
-                    if (shopImageTexture == NULL) {
-                        std::cerr << "Failed to load shop image!" << std::endl;
-                        shopOpen = false;
-                    }
-                }
-                else {
-                    SDL_DestroyTexture(shopImageTexture);
-                    shopImageTexture = NULL;
-                }
-            }
-        }
-    }
-    else if (!currentKeyStates[SDL_SCANCODE_SPACE]) {
-        spacePressed = false;
-    }
-
-    SDL_Rect rockRect = { (WINDOW_WIDTH / 2) - (BLOCK_SIZE / 2) - 5, (WINDOW_HEIGHT / 2) - (BLOCK_SIZE / 2) - 5, BLOCK_SIZE + 10, BLOCK_SIZE + 10 };
-    if (currentKeyStates[SDL_SCANCODE_SPACE] && AABB(playerRect, rockRect)) {
-        static float accumulatedTime = 0.0f;
-        accumulatedTime += deltaTime;
-
-        while (accumulatedTime >= (1.0f / miningSpeed)) {
-            oreCount++;
-            accumulatedTime -= (1.0f / miningSpeed);
-        }
-    }
-}
-
-void movePlayer(float deltaTime) {
-    float newPosX = playerPosX + playerVelX * deltaTime;
-    float newPosY = playerPosY + playerVelY * deltaTime;
-
-    // Boundary collision detection
-    if (newPosX < BLOCK_SIZE) {
-        newPosX = BLOCK_SIZE;
-    }
-    if (newPosX > WINDOW_WIDTH - BLOCK_SIZE - PLAYER_SIZE) {
-        newPosX = WINDOW_WIDTH - BLOCK_SIZE - PLAYER_SIZE;
-    }
-    if (newPosY < BLOCK_SIZE) {
-        newPosY = BLOCK_SIZE;
-    }
-    if (newPosY > WINDOW_HEIGHT - BLOCK_SIZE - PLAYER_SIZE) {
-        newPosY = WINDOW_HEIGHT - BLOCK_SIZE - PLAYER_SIZE;
-    }
-
-    // Shop and rock collision detection
-    SDL_Rect shopRect = { 70, 30, 100, 20 };
-    SDL_Rect rockRect = { (WINDOW_WIDTH / 2) - (BLOCK_SIZE / 2), (WINDOW_HEIGHT / 2) - (BLOCK_SIZE / 2), BLOCK_SIZE, BLOCK_SIZE };
-
-    if (!AABB({ static_cast<int>(newPosX), static_cast<int>(newPosY), playerRect.w, playerRect.h }, shopRect) &&
-        !AABB({ static_cast<int>(newPosX), static_cast<int>(newPosY), playerRect.w, playerRect.h }, rockRect)) {
-        playerPosX = newPosX;
-        playerPosY = newPosY;
-    }
-
-    playerRect.x = static_cast<int>(playerPosX);
-    playerRect.y = static_cast<int>(playerPosY);
 }
 #pragma endregion
