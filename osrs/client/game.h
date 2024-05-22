@@ -17,6 +17,7 @@ const float PLAYER_SPEED = 200.0f;
 const Uint8* currentKeyStates;
 const char* iconPath = "../../../media/icon.png";
 const std::string shopImagePath = "../../../media/shop.png";
+const std::string scoreboardImagePath = "../../../media/scoreboard.png";
 const std::string fontPath = "../../../media/Ac437_IBM_VGA_9x8.ttf";
 const std::unordered_map<int, float> SHOP_SPEEDS = {
     {1, 10.0f},
@@ -34,6 +35,7 @@ const std::unordered_map<int, int> SHOP_COSTS = {
 };
 const SDL_Rect rockRect = { (WINDOW_WIDTH / 2) - (BLOCK_SIZE / 2) - 5, (WINDOW_HEIGHT / 2) - (BLOCK_SIZE / 2) - 5, BLOCK_SIZE + 10, BLOCK_SIZE + 10 };
 const SDL_Rect shopRect = { 70 - 5, 30 - 5, 100 + 10, 20 + 10 };
+const SDL_Rect scoreboardRect = { WINDOW_WIDTH / 4, WINDOW_HEIGHT / 4, WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2 };
 
 SDL_Rect playerRect = { WINDOW_WIDTH / 2 - PLAYER_SIZE / 2 - 60, WINDOW_HEIGHT / 2 - PLAYER_SIZE / 2, PLAYER_SIZE, PLAYER_SIZE };
 SDL_Window* window = NULL;
@@ -351,6 +353,49 @@ void renderOreCounter(uint32_t oreCount) {
     renderText(oreText, rect);
 }
 
+void renderScoreboard(const std::unordered_map<uint32_t, sPlayerDescription>& mapObjects) {
+    static SDL_Texture* scoreboardTexture = loadTexture(scoreboardImagePath);
+    if (scoreboardTexture == nullptr) {
+        std::cerr << "Failed to load scoreboard image!" << std::endl;
+        return;
+    }
+
+    SDL_RenderCopy(renderer, scoreboardTexture, NULL, &scoreboardRect);
+
+    std::vector<std::pair<uint32_t, sPlayerDescription>> players(mapObjects.begin(), mapObjects.end());
+    std::sort(players.begin(), players.end(), [](const auto& a, const auto& b) {
+        if (a.second.nOreCount == b.second.nOreCount) {
+            // Order by ID if ore count is the same
+            return a.first < b.first;
+        }
+        // Otherwise, order by ore count
+        return a.second.nOreCount > b.second.nOreCount;
+    });
+
+    int displayCount = std::min(static_cast<int>(players.size()), 5);
+
+    for (int i = 0; i < displayCount; ++i) {
+        const auto& player = players[i];
+        SDL_Color playerColor = colorToSDLColor(player.second.nColor);
+        SDL_Rect charRect = { scoreboardRect.x + 20, scoreboardRect.y + 20 + i * 40, BLOCK_SIZE, BLOCK_SIZE };
+
+        // Render player character
+        renderChar(0x263A, charRect, player.second.nColor);
+
+        // Render player ID
+        std::string idText = std::to_string(player.first);
+        int idTextWidth = idText.length() * BLOCK_SIZE;
+        SDL_Rect idRect = { charRect.x + 50, charRect.y, idTextWidth, BLOCK_SIZE };
+        renderText(idText, idRect, player.second.nColor);
+
+        // Render player ore count
+        std::string oreText = std::to_string(player.second.nOreCount);
+        int oreTextWidth = oreText.length() * BLOCK_SIZE;
+        SDL_Rect oreRect = { scoreboardRect.x + scoreboardRect.w - oreTextWidth - 20, charRect.y, oreTextWidth, BLOCK_SIZE };
+        renderText(oreText, oreRect, player.second.nColor);
+    }
+}
+
 void render() {
     // Clear render
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
@@ -371,6 +416,11 @@ void render() {
     // Render image if shop is open
     if (shopOpen && shopImageTexture != NULL) {
         SDL_RenderCopy(renderer, shopImageTexture, NULL, NULL);
+    }
+
+    // Render scoreboard if shop isn't open
+    if (!shopOpen && currentKeyStates[SDL_SCANCODE_TAB]) {
+        renderScoreboard(mapObjects);
     }
     SDL_RenderPresent(renderer);
 }

@@ -1,7 +1,9 @@
 ﻿  Client.cpp
 C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.34.31933\include\optional(12): warning STL4038: The contents of <optional> are available only with C++17 or later.
-C:\Users\Fluffles\Documents\GitHub\OSRS\osrs\client\game.h(229,49): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\Fluffles\Documents\GitHub\OSRS\osrs\client\game.h(443,103): warning C4018: '>=': signed/unsigned mismatch
+C:\Users\Fluffles\Documents\GitHub\OSRS\osrs\client\game.h(231,49): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+C:\Users\Fluffles\Documents\GitHub\OSRS\osrs\client\game.h(387,55): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\Fluffles\Documents\GitHub\OSRS\osrs\client\game.h(393,57): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\Fluffles\Documents\GitHub\OSRS\osrs\client\game.h(493,103): warning C4018: '>=': signed/unsigned mismatch
 C:\Users\Fluffles\Documents\GitHub\OSRS\osrs\networking\message.h(57,1): warning C4267: '=': conversion from 'size_t' to 'uint32_t', possible loss of data
 C:\Users\Fluffles\Documents\GitHub\OSRS\osrs\client\Client.cpp(33,1): message : see reference to function template instantiation 'tfg::net::message<T> &tfg::net::operator <<<sPlayerDescription>(tfg::net::message<T> &,const DataType &)' being compiled
           with
