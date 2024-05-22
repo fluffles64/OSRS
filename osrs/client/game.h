@@ -32,13 +32,13 @@ const std::unordered_map<int, int> SHOP_COSTS = {
     {4, 4090},
     {5, 100000}
 };
+const SDL_Rect rockRect = { (WINDOW_WIDTH / 2) - (BLOCK_SIZE / 2) - 5, (WINDOW_HEIGHT / 2) - (BLOCK_SIZE / 2) - 5, BLOCK_SIZE + 10, BLOCK_SIZE + 10 };
+const SDL_Rect shopRect = { 70 - 5, 30 - 5, 100 + 10, 20 + 10 };
 
+SDL_Rect playerRect = { WINDOW_WIDTH / 2 - PLAYER_SIZE / 2 - 60, WINDOW_HEIGHT / 2 - PLAYER_SIZE / 2, PLAYER_SIZE, PLAYER_SIZE };
 SDL_Window* window = NULL;
 SDL_Renderer* renderer = NULL;
 TTF_Font* font = NULL;
-SDL_Rect playerRect = { WINDOW_WIDTH / 2 - PLAYER_SIZE / 2 - 60, WINDOW_HEIGHT / 2 - PLAYER_SIZE / 2, PLAYER_SIZE, PLAYER_SIZE };
-SDL_Rect rockRect = { (WINDOW_WIDTH / 2) - (BLOCK_SIZE / 2) - 5, (WINDOW_HEIGHT / 2) - (BLOCK_SIZE / 2) - 5, BLOCK_SIZE + 10, BLOCK_SIZE + 10 };
-SDL_Rect shopRect = { 70 - 5, 30 - 5, 100 + 10, 20 + 10 };
 SDL_Texture* shopImageTexture = NULL;
 Mix_Chunk* miningSound = nullptr;
 Mix_Chunk* oreObtainedSound1 = nullptr;
@@ -51,21 +51,7 @@ Mix_Chunk* shopCloseSound = nullptr;
 Mix_Chunk* haggleSound1 = nullptr;
 Mix_Chunk* haggleSound2 = nullptr;
 Mix_Chunk* haggleSound3 = nullptr;
-
-bool shopOpen = false;
-bool spacePressed = false;
-bool key1Pressed = false;
-bool key2Pressed = false;
-bool key3Pressed = false;
-bool key4Pressed = false;
-bool key5Pressed = false;
-
-std::unordered_map<uint32_t, sPlayerDescription> mapObjects;
-uint32_t nPlayerID = 0;
-sPlayerDescription descPlayer;
-bool bWaitingForConnection = true;
-
-std::vector<std::pair<Mix_Chunk*&, std::string>> soundFiles = {
+const std::vector<std::pair<Mix_Chunk*&, std::string>> soundFiles = {
     {miningSound, "../../../media/sound/breakingStone.wav"},
     {oreObtainedSound1, "../../../media/sound/stone1.wav"},
     {oreObtainedSound2, "../../../media/sound/stone2.wav"},
@@ -78,6 +64,19 @@ std::vector<std::pair<Mix_Chunk*&, std::string>> soundFiles = {
     {haggleSound2, "../../../media/sound/haggle2.wav"},
     {haggleSound3, "../../../media/sound/haggle3.wav"}
 };
+
+bool shopOpen = false;
+bool spacePressed = false;
+bool key1Pressed = false;
+bool key2Pressed = false;
+bool key3Pressed = false;
+bool key4Pressed = false;
+bool key5Pressed = false;
+bool bWaitingForConnection = true;
+
+std::unordered_map<uint32_t, sPlayerDescription> mapObjects;
+uint32_t nPlayerID = 0;
+sPlayerDescription descPlayer;
 #pragma endregion
 
 #pragma region Helper Methods
@@ -157,7 +156,7 @@ void renderText(const std::string& text, SDL_Rect rect, Color color = { 255, 255
     int textWidth = textSurface->w;
     int textHeight = textSurface->h;
 
-    SDL_Rect destRect = { rect.x, rect.y, textWidth, textHeight };
+    SDL_Rect destRect = { rect.x, rect.y, rect.w, rect.h };
 
     SDL_RenderCopy(renderer, textTexture, NULL, &destRect);
     SDL_FreeSurface(textSurface);
@@ -221,7 +220,7 @@ bool init() {
         return true;
     };
 
-    for (auto& soundFile : soundFiles) {
+    for (const auto& soundFile : soundFiles) {
         if (!loadSound(soundFile.first, soundFile.second)) {
             return false;
         }
@@ -348,7 +347,7 @@ void renderWorld() {
 void renderOreCounter(uint32_t oreCount) {
     std::string oreText = "Ore: " + std::to_string(oreCount);
     SDL_Point textSize = getTextSize(oreText);
-    SDL_Rect rect = { WINDOW_WIDTH - textSize.x - 30, 30, textSize.x, textSize.y };
+    SDL_Rect rect = { WINDOW_WIDTH - textSize.x - 30, 30, textSize.x - 5, textSize.y - 5 };
     renderText(oreText, rect);
 }
 
