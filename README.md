@@ -2,9 +2,9 @@
 
 OSRS is a simple game written in C++ designed to test a custom networking framework inspired by the one from OneLoneCoder (https://github.com/OneLoneCoder/Javidx9/tree/master/PixelGameEngine/BiggerProjects/Networking). The framework utilizes a server-client topology and is developed using C++ with the ASIO library, featuring custom messages, a thread-safe queue, client validation, and more.
 
-<div>
-    <img src="media/banner.png" alt="Image 1" width="200" style="display:inline-block; margin-right:10px;">
-    <img src="media/shop.png" alt="Image 2" width="200" style="display:inline-block;">
+<div style="display: flex; justify-content: center;">
+    <img src="media/banner.png" alt="Image 1" style="max-width: 100%; height: auto; margin-right: 10px;">
+    <img src="media/shop.png" alt="Image 2" style="max-width: 100%; height: auto;">
 </div>
 
 ## Features
