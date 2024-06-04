@@ -1,6 +1,6 @@
 # OSRS (One Single Rock Server)
 
-OSRS is a simple game written in C++ designed to test a custom networking framework inspired by the one from OneLoneCoder (https://github.com/OneLoneCoder/Javidx9/tree/master/PixelGameEngine/BiggerProjects/Networking). The framework utilizes a server-client topology and is developed using C++ with the ASIO library, featuring custom messages, a thread-safe queue, client validation, and more.
+OSRS is a simple game written in C++ designed to implement a custom networking framework inspired by the one from [OneLoneCoder](https://github.com/OneLoneCoder/Javidx9/tree/master/PixelGameEngine/BiggerProjects/Networking). The framework utilizes a server-client topology and is developed using C++ with the ASIO library, featuring custom messages, a thread-safe queue, client validation, and more.
 
 <div>
     <img src="media/banner.png" alt="Image 1" width="400" style="display:inline-block; margin-right:10px;">
@@ -25,6 +25,7 @@ OSRS is a simple game written in C++ designed to test a custom networking framew
 
 ## Controls
 
-- WASD to move around
-- Space to interact -> Hold to mine ore, press to open/close shop
-- 1-2-3-4-5 to buy new pickaxes in the shop
+- `WASD` to move around.
+- `Space` to interact. Hold to mine ore, tap to open or close the shop.
+- `Tab` to view scoreboard.
+- `1, 2, 3, 4, 5` to buy new pickaxes in the shop.
