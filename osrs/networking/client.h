@@ -4,6 +4,12 @@
 #include "tsqueue.h"
 #include "connection.h"
 
+/// <summary>
+/// Copyright 2018 - 2021 OneLoneCoder.com
+/// The client class is responsible for connecting to a server in the framework.
+/// It implements methods for asynchronous I/O operations and message exchange with the server.
+/// </summary>
+
 namespace tfg
 {
 	namespace net
@@ -14,7 +20,7 @@ namespace tfg
 		public:
 			client_interface() : m_socket(m_context)
 			{
-				// Initialise the socket with the io context, so it can do stuff
+				// Initialise the socket with the io context, so it has work to do
 			}
 
 			virtual ~client_interface()
@@ -90,16 +96,16 @@ namespace tfg
 			}
 
 		protected:
-			// ASIO context handles the data transfer
+			// ASIO context
 			asio::io_context m_context;
 
-			// but it needs a thread of its own to execute its work commands
+			// Give the context a thread of its own to execute its work commands
 			std::thread thrContext;
 
-			// This is the hardware socket that is connected to the server
+			// Hardware socket that is connected to the server
 			asio::ip::tcp::socket m_socket;
 
-			// The client has a single instance of a "connection" object, which handles data transfer
+			// The client has a single instance of a connection object, which handles data transfer
 			std::unique_ptr<connection<T>> m_connection;
 
 		private:

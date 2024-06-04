@@ -32,7 +32,7 @@ private:
 			return { 255, 255, 255 };
 		}
 
-		// Shuffle the available colors
+		// Shuffle available colors
 		std::random_shuffle(m_vAvailableColors.begin(), m_vAvailableColors.end());
 
 		// Take the last color from the shuffled list
@@ -49,14 +49,13 @@ private:
 protected:
 	bool OnClientConnect(std::shared_ptr<tfg::net::connection<GameMsg>> client) override
 	{
-		// For now we will allow all 
+		// Allow all 
 		return true;
 	}
 
 	void OnClientValidated(std::shared_ptr<tfg::net::connection<GameMsg>> client) override
 	{
-		// Client passed validation check, so send them a message informing
-		// them they can continue to communicate
+		// Client passed validation check, so send them a message informing them they can continue to communicate
 		tfg::net::message<GameMsg> msg;
 		msg.header.id = GameMsg::Client_Accepted;
 		client->Send(msg);
@@ -68,7 +67,7 @@ protected:
 		{
 			if (m_mapPlayerRoster.find(client->GetID()) == m_mapPlayerRoster.end())
 			{
-				// client never added to roster, so just let it disappear
+				// Client never added to roster, so just let it disappear
 			}
 			else
 			{
@@ -79,7 +78,6 @@ protected:
 				m_vGarbageIDs.push_back(client->GetID());
 			}
 		}
-
 	}
 
 	void OnMessage(std::shared_ptr<tfg::net::connection<GameMsg>> client, tfg::net::message<GameMsg>& msg) override
@@ -144,11 +142,14 @@ protected:
 
 int main()
 {
+	// Start server in port 60000
 	Server server(60000);
 	server.Start();
 
 	while (1)
 	{
+		// If wait is set to true, the server will wait until client sends a message
+		// so that the server doesn't use 100% of the CPU core
 		server.Update(-1, true);
 	}
 	return 0;

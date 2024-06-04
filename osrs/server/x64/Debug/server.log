@@ -1,26 +1,26 @@
 ﻿  Server.cpp
 C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.34.31933\include\optional(12): warning STL4038: The contents of <optional> are available only with C++17 or later.
-C:\Users\Fluffles\Documents\GitHub\OSRS\osrs\networking\message.h(57,1): warning C4267: '=': conversion from 'size_t' to 'uint32_t', possible loss of data
-C:\Users\Fluffles\Documents\GitHub\OSRS\osrs\server\Server.cpp(93,1): message : see reference to function template instantiation 'tfg::net::message<T> &tfg::net::operator <<<unsigned int>(tfg::net::message<T> &,const DataType &)' being compiled
+C:\Users\Fluffles\Documents\GitHub\OSRS\OSRS\networking\message.h(63,1): warning C4267: '=': conversion from 'size_t' to 'uint32_t', possible loss of data
+C:\Users\Fluffles\Documents\GitHub\OSRS\OSRS\server\Server.cpp(91,1): message : see reference to function template instantiation 'tfg::net::message<T> &tfg::net::operator <<<unsigned int>(tfg::net::message<T> &,const DataType &)' being compiled
           with
           [
               T=GameMsg,
               DataType=unsigned int
           ]
-C:\Users\Fluffles\Documents\GitHub\OSRS\osrs\server\Server.cpp(93,7): message : see reference to function template instantiation 'tfg::net::message<T> &tfg::net::operator <<<unsigned int>(tfg::net::message<T> &,const DataType &)' being compiled
+C:\Users\Fluffles\Documents\GitHub\OSRS\OSRS\server\Server.cpp(91,7): message : see reference to function template instantiation 'tfg::net::message<T> &tfg::net::operator <<<unsigned int>(tfg::net::message<T> &,const DataType &)' being compiled
           with
           [
               T=GameMsg,
               DataType=unsigned int
           ]
-C:\Users\Fluffles\Documents\GitHub\OSRS\osrs\networking\message.h(79,1): warning C4267: '=': conversion from 'size_t' to 'uint32_t', possible loss of data
-C:\Users\Fluffles\Documents\GitHub\OSRS\osrs\server\Server.cpp(105,1): message : see reference to function template instantiation 'tfg::net::message<T> &tfg::net::operator >><sPlayerDescription>(tfg::net::message<T> &,DataType &)' being compiled
+C:\Users\Fluffles\Documents\GitHub\OSRS\OSRS\networking\message.h(74,1): warning C4267: '=': conversion from 'size_t' to 'uint32_t', possible loss of data
+C:\Users\Fluffles\Documents\GitHub\OSRS\OSRS\server\Server.cpp(103,1): message : see reference to function template instantiation 'tfg::net::message<T> &tfg::net::operator >><sPlayerDescription>(tfg::net::message<T> &,DataType &)' being compiled
           with
           [
               T=GameMsg,
               DataType=sPlayerDescription
           ]
-C:\Users\Fluffles\Documents\GitHub\OSRS\osrs\server\Server.cpp(105,9): message : see reference to function template instantiation 'tfg::net::message<T> &tfg::net::operator >><sPlayerDescription>(tfg::net::message<T> &,DataType &)' being compiled
+C:\Users\Fluffles\Documents\GitHub\OSRS\OSRS\server\Server.cpp(103,9): message : see reference to function template instantiation 'tfg::net::message<T> &tfg::net::operator >><sPlayerDescription>(tfg::net::message<T> &,DataType &)' being compiled
           with
           [
               T=GameMsg,

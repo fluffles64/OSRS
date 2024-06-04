@@ -1,16 +1,23 @@
 #pragma once
 #include "common.h"
 
+/// <summary>
+/// Copyright 2018 - 2021 OneLoneCoder.com
+/// The messages have two components: Header and body.
+/// The header includes an id and the size of the entire message (including the header).
+/// The body is essentially the payload of the message. It can also be non-existent (0 bytes).
+/// Header is always sent first, as it has a fixed size.
+/// The id of the header uses an enum class to validate the accuracy of the headers at compile time.
+/// Similarly, templates (enum classes) are used to make the framework fit any kind of game, instead
+/// of creating hundreds of message types.
+/// The size uses uint32_t instead of size(T) to prevent issues with servers being 64bits and
+/// clients being 32 bits or vice versa.
+/// </summary>
+
 namespace tfg
 {
 	namespace net
 	{
-		// Message Header is sent at start of all messages. The template allows us
-		// to use "enum class" to ensure that the messages are valid at compile time
-		// We are using a uin32_t for the size instead of size(T) becuase if the server is 64 bytes
-		// and the client 32 or vice versa it can cause problems. (we cant guarantee that
-		// size T is the same on a 32 or 64 byte computer).
-		//Furthermore uint32_t should be more than sufficient.
 		template <typename T>
 		struct message_header
 		{
@@ -24,70 +31,56 @@ namespace tfg
 			message_header<T> header{};
 			std::vector<uint8_t> body;
 
-			// Returns size of entire message packet in bytes
-			size_t size() const {
+			// Returns size of the entire message (header + body)
+			size_t size() const
+			{
 				return sizeof(message_header<T>) + body.size();
 			}
 
-			// Override for std:cout compatibility - produces friendly description of message
-			friend std::ostream& operator << (std::ostream& os, const message<T>& msg) {
+			// Override that shows message id and size with std::cout support
+			friend std::ostream& operator << (std::ostream& os, const message<T>& msg)
+			{
 				os << "ID:" << int(msg.header.id) << " Size:" << msg.header.size;
 				return os;
 			}
 
-			// Pushes any POD-like data into the message buffer
+			 /// These two overloaded operators push/pop Plain Old Data (POD) into/out of the
+			 /// message buffer, respectively.
+			 /// They first check if the data being pushed/extracted is of a copyable type.
+			 /// Then they cache the size of the vector. The >> operator does it at the end of the vector where
+			 /// the pulled data starts. Then they resize/shrink the vector. Resizing it (<<) can introduce overhead.
+			 /// The << operator copies the data into the newly allocated vector space, while the >> operator copies the
+			 /// data from the vector into the user variable. After modifying the message buffer, they both
+			 /// recalculate the message size.
+			
 			template<typename DataType>
-			friend message<T>& operator << (message<T>& msg, const DataType& data) {
-				// Check that the type of data being pushed is copyable
+			friend message<T>& operator << (message<T>& msg, const DataType& data)
+			{			
 				static_assert(std::is_standard_layout<DataType>::value, "Data is too complex to be copied");
-
-				// Cache current size of vector, as this will be the point we insert the data
 				size_t i = msg.body.size();
-
-				// Resize the vector by the size of the data being pushed
-				// This can introduce a bit of overhead, as each time we add something
-				// to the body vector it needs to be resized. However, it shouldn't grow linearily
-				// and in practice, it will have minimum overhead.
 				msg.body.resize(msg.body.size() + sizeof(DataType));
-
-				// Physically copy the data into the newly allocated vector space
 				std::memcpy(msg.body.data() + i, &data, sizeof(DataType));
-
-				// Recalculate the message size
 				msg.header.size = msg.size();
-
-				// Return the target message so it can be chained
 				return msg;
 			}
 
 			template<typename DataType>
-			friend message<T>& operator >> (message<T>& msg, DataType& data) {
-				// Check that the type of the data being pushed is copyable
+			friend message<T>& operator >> (message<T>& msg, DataType& data)
+			{
 				static_assert(std::is_standard_layout<DataType>::value, "Data is too complex to be pushed");
-
-				// Cache the location towards the end of the vector where the pulled data starts
 				size_t i = msg.body.size() - sizeof(DataType);
-
-				//Physically copy the data from the vector into the user variable
 				std::memcpy(&data, msg.body.data() + i, sizeof(DataType));
-
-				// Shrink the vector to remove read bytes, and reset end position
-				// Unlike with resize, shrinking doesnt introduce overhead.
 				msg.body.resize(i);
-
-				// Recalculate the message size
 				msg.header.size = msg.size();
-
-				// Return the target message so it can be chained
 				return msg;
 			}
 		};
 
-		// An "owned" message is identical to a regular message, but it is associated with
-		// a connection. On a server, the owner would be the client that sent the message, 
-		// on a client the owner would be the server.
+		///	In order to know where the messages come from, we will create owned messages. These messages 
+		/// are identical to regular message, but they are always associated with
+		///	a connection. On a server, the owner would be the client that sent the message,
+		///	on a client the owner would be the server.
 
-		// Forward declare the connection
 		template <typename T>
 		class connection;
 
@@ -97,7 +90,7 @@ namespace tfg
 			std::shared_ptr<connection<T>> remote = nullptr;
 			message<T> msg;
 
-			// Again, a friendly string maker
+			// Overload the << operator to enable printing owned_message<T> objects
 			friend std::ostream& operator<<(std::ostream& os, const owned_message<T>& msg)
 			{
 				os << msg.msg;

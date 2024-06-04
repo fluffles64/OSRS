@@ -82,22 +82,27 @@ sPlayerDescription descPlayer;
 #pragma endregion
 
 #pragma region Helper Methods
-bool AABB(const SDL_Rect& rectA, const SDL_Rect& rectB) {
+bool AABB(const SDL_Rect& rectA, const SDL_Rect& rectB)
+{
     return rectA.x < rectB.x + rectB.w &&
         rectA.x + rectA.w > rectB.x &&
         rectA.y < rectB.y + rectB.h &&
         rectA.y + rectA.h > rectB.y;
 }
 
-SDL_Texture* loadTexture(const std::string& path) {
+SDL_Texture* loadTexture(const std::string& path)
+{
     SDL_Texture* newTexture = NULL;
     SDL_Surface* loadedSurface = IMG_Load(path.c_str());
-    if (loadedSurface == NULL) {
+    if (loadedSurface == NULL)
+    {
         std::cerr << "Unable to load image " << path << "! SDL_image Error: " << IMG_GetError() << std::endl;
     }
-    else {
+    else
+    {
         newTexture = SDL_CreateTextureFromSurface(renderer, loadedSurface);
-        if (newTexture == NULL) {
+        if (newTexture == NULL)
+        {
             std::cerr << "Unable to create texture from " << path << "! SDL Error: " << SDL_GetError() << std::endl;
         }
         SDL_FreeSurface(loadedSurface);
@@ -105,7 +110,8 @@ SDL_Texture* loadTexture(const std::string& path) {
     return newTexture;
 }
 
-SDL_Color colorToSDLColor(const Color& color) {
+SDL_Color colorToSDLColor(const Color& color)
+{
     SDL_Color sdlColor;
     sdlColor.r = color.r;
     sdlColor.g = color.g;
@@ -114,42 +120,49 @@ SDL_Color colorToSDLColor(const Color& color) {
     return sdlColor;
 }
 
-SDL_Point getTextSize(const std::string& text) {
+SDL_Point getTextSize(const std::string& text)
+{
     int textWidth, textHeight;
     TTF_SizeText(font, text.c_str(), &textWidth, &textHeight);
     return { textWidth, textHeight };
 }
 
-void renderChar(Uint16 unicodeValue, SDL_Rect rect, Color color = { 255, 255, 255 }) {
+void renderChar(Uint16 unicodeValue, SDL_Rect rect, Color color = { 255, 255, 255 })
+{
     SDL_Color sdlColor = colorToSDLColor(color);
     SDL_Surface* textSurface = TTF_RenderGlyph_Solid(font, unicodeValue, sdlColor);
-    if (textSurface == nullptr) {
+    if (textSurface == nullptr)
+    {
         std::cerr << "Failed to render char! SDL_ttf Error: " << TTF_GetError() << std::endl;
         return;
     }
+
     SDL_Texture* textTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
-    if (textTexture == nullptr) {
+    if (textTexture == nullptr)
+    {
         std::cerr << "Failed to create texture from surface! SDL Error: " << SDL_GetError() << std::endl;
         SDL_FreeSurface(textSurface);
         return;
     }
-    SDL_RenderCopy(renderer, textTexture, NULL, &rect);
 
+    SDL_RenderCopy(renderer, textTexture, NULL, &rect);
     SDL_FreeSurface(textSurface);
     SDL_DestroyTexture(textTexture);
 }
 
-void renderText(const std::string& text, SDL_Rect rect, Color color = { 255, 255, 255 }) {
+void renderText(const std::string& text, SDL_Rect rect, Color color = { 255, 255, 255 })
+{
     SDL_Color textColor = colorToSDLColor(color);
-
     SDL_Surface* textSurface = TTF_RenderText_Solid(font, text.c_str(), textColor);
-    if (textSurface == nullptr) {
+    if (textSurface == nullptr)
+    {
         std::cerr << "Failed to render text surface! SDL_ttf Error: " << TTF_GetError() << std::endl;
         return;
     }
 
     SDL_Texture* textTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
-    if (textTexture == nullptr) {
+    if (textTexture == nullptr)
+    {
         std::cerr << "Failed to create texture from surface! SDL Error: " << SDL_GetError() << std::endl;
         SDL_FreeSurface(textSurface);
         return;
@@ -157,7 +170,6 @@ void renderText(const std::string& text, SDL_Rect rect, Color color = { 255, 255
 
     int textWidth = textSurface->w;
     int textHeight = textSurface->h;
-
     SDL_Rect destRect = { rect.x, rect.y, rect.w, rect.h };
 
     SDL_RenderCopy(renderer, textTexture, NULL, &destRect);
@@ -167,63 +179,76 @@ void renderText(const std::string& text, SDL_Rect rect, Color color = { 255, 255
 #pragma endregion
 
 #pragma region Init/Close
-bool init() {
-    if (SDL_Init(SDL_INIT_VIDEO) < 0) {
+bool init()
+{
+    if (SDL_Init(SDL_INIT_VIDEO) < 0)
+    {
         std::cerr << "SDL could not initialize! SDL_Error: " << SDL_GetError() << std::endl;
         return false;
     }
 
     window = SDL_CreateWindow("O.S.R.S", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_SHOWN);
-    if (window == NULL) {
+    if (window == NULL)
+    {
         std::cerr << "Window could not be created! SDL_Error: " << SDL_GetError() << std::endl;
         return false;
     }
 
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
-    if (renderer == NULL) {
+    if (renderer == NULL)
+    {
         std::cerr << "Renderer could not be created! SDL_Error: " << SDL_GetError() << std::endl;
         return false;
     }
 
     SDL_Surface* iconSurface = IMG_Load(iconPath);
-    if (iconSurface == NULL) {
+    if (iconSurface == NULL)
+    {
         std::cerr << "Failed to load icon image! SDL_Error: " << SDL_GetError() << std::endl;
         return false;
     }
     SDL_SetWindowIcon(window, iconSurface);
 
-    if (TTF_Init() == -1) {
+    if (TTF_Init() == -1)
+    {
         std::cerr << "SDL_ttf could not initialize! SDL_ttf Error: " << TTF_GetError() << std::endl;
         return false;
     }
 
     font = TTF_OpenFont(fontPath.c_str(), BLOCK_SIZE);
-    if (font == nullptr) {
+    if (font == nullptr)
+    {
         std::cerr << "Failed to load font! SDL_ttf Error: " << TTF_GetError() << std::endl;
         return false;
     }
 
-    if (!(IMG_Init(IMG_INIT_PNG) & IMG_INIT_PNG)) {
+    if (!(IMG_Init(IMG_INIT_PNG) & IMG_INIT_PNG))
+    {
         std::cerr << "SDL_image could not initialize! SDL_image Error: " << IMG_GetError() << std::endl;
         return false;
     }
 
-    if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048) < 0) {
+    if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048) < 0)
+    {
         std::cerr << "SDL_mixer could not initialize! SDL_mixer Error: " << Mix_GetError() << std::endl;
         return false;
     }
 
-    auto loadSound = [&](Mix_Chunk*& sound, const std::string& path) {
+    auto loadSound = [&](Mix_Chunk*& sound, const std::string& path)
+    {
         sound = Mix_LoadWAV(path.c_str());
-        if (sound == nullptr) {
+        if (sound == nullptr)
+        {
             std::cerr << "Failed to load sound effect: " << path << "! SDL_mixer Error: " << Mix_GetError() << std::endl;
             return false;
         }
         return true;
     };
 
-    for (const auto& soundFile : soundFiles) {
-        if (!loadSound(soundFile.first, soundFile.second)) {
+    for (const auto& soundFile : soundFiles)
+    {
+        if (!loadSound(soundFile.first, soundFile.second))
+        {
             return false;
         }
     }
@@ -246,23 +271,30 @@ bool init() {
     return true;
 }
 
-void close() {
-    auto destroyTexture = [](SDL_Texture*& texture) {
-        if (texture != NULL) {
+void close()
+{
+    auto destroyTexture = [](SDL_Texture*& texture)
+    {
+        if (texture != NULL)
+        {
             SDL_DestroyTexture(texture);
             texture = NULL;
         }
     };
 
-    auto freeSound = [](Mix_Chunk*& sound) {
-        if (sound != NULL) {
+    auto freeSound = [](Mix_Chunk*& sound)
+    {
+        if (sound != NULL)
+        {
             Mix_FreeChunk(sound);
             sound = NULL;
         }
     };
 
-    auto closeFont = [](TTF_Font*& font) {
-        if (font != NULL) {
+    auto closeFont = [](TTF_Font*& font)
+    {
+        if (font != NULL)
+        {
             TTF_CloseFont(font);
             font = NULL;
         }
@@ -288,13 +320,15 @@ void close() {
     closeFont(font);
 
     // Destroy the renderer
-    if (renderer != NULL) {
+    if (renderer != NULL)
+    {
         SDL_DestroyRenderer(renderer);
         renderer = NULL;
     }
 
     // Destroy the window
-    if (window != NULL) {
+    if (window != NULL)
+    {
         SDL_DestroyWindow(window);
         window = NULL;
     }
@@ -308,20 +342,20 @@ void close() {
 #pragma endregion
 
 #pragma region Rendering
-void renderWorld() {
+void renderWorld()
+{
     // Borders
-    for (int x = 0; x < WINDOW_WIDTH; x += BLOCK_SIZE) {
+    for (int x = 0; x < WINDOW_WIDTH; x += BLOCK_SIZE)
         renderChar(0x2593, { x, 0, BLOCK_SIZE, BLOCK_SIZE });
-    }
-    for (int x = 0; x < WINDOW_WIDTH; x += BLOCK_SIZE) {
+
+    for (int x = 0; x < WINDOW_WIDTH; x += BLOCK_SIZE)
         renderChar(0x2593, { x, WINDOW_HEIGHT - BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE });
-    }
-    for (int y = 0; y < WINDOW_HEIGHT; y += BLOCK_SIZE) {
+
+    for (int y = 0; y < WINDOW_HEIGHT; y += BLOCK_SIZE)
         renderChar(0x2593, { 0, y, BLOCK_SIZE, BLOCK_SIZE });
-    }
-    for (int y = 0; y < WINDOW_HEIGHT; y += BLOCK_SIZE) {
+
+    for (int y = 0; y < WINDOW_HEIGHT; y += BLOCK_SIZE)
         renderChar(0x2593, { WINDOW_WIDTH - BLOCK_SIZE, y, BLOCK_SIZE, BLOCK_SIZE });
-    }
 
     // Shop
     renderChar(0x2502, { 60, 20, BLOCK_SIZE, BLOCK_SIZE });
@@ -335,27 +369,29 @@ void renderWorld() {
     renderChar(0x2518, { 150, 30, BLOCK_SIZE, BLOCK_SIZE });
     renderChar(0x2518, { 160, 40, BLOCK_SIZE, BLOCK_SIZE });
 
-    for (int x = 80; x < 160; x += BLOCK_SIZE) {
+    for (int x = 80; x < 160; x += BLOCK_SIZE)
         renderChar(0x2500, { x, 30, BLOCK_SIZE, BLOCK_SIZE });
-    }
-    for (int x = 80; x < 160; x += BLOCK_SIZE) {
+
+    for (int x = 80; x < 160; x += BLOCK_SIZE)
         renderChar(0x2500, { x, 40, BLOCK_SIZE, BLOCK_SIZE });
-    }
 
     // Rock
     renderChar(0x1E, { (WINDOW_WIDTH / 2) - (BLOCK_SIZE / 2), (WINDOW_HEIGHT / 2) - (BLOCK_SIZE / 2), BLOCK_SIZE, BLOCK_SIZE });
 }
 
-void renderOreCounter(uint32_t oreCount) {
+void renderOreCounter(uint32_t oreCount)
+{
     std::string oreText = "Ore: " + std::to_string(oreCount);
     SDL_Point textSize = getTextSize(oreText);
     SDL_Rect rect = { WINDOW_WIDTH - textSize.x - 30, 30, textSize.x - 5, textSize.y - 5 };
     renderText(oreText, rect);
 }
 
-void renderScoreboard(const std::unordered_map<uint32_t, sPlayerDescription>& mapObjects) {
+void renderScoreboard(const std::unordered_map<uint32_t, sPlayerDescription>& mapObjects)
+{
     static SDL_Texture* scoreboardTexture = loadTexture(scoreboardImagePath);
-    if (scoreboardTexture == nullptr) {
+    if (scoreboardTexture == nullptr)
+    {
         std::cerr << "Failed to load scoreboard image!" << std::endl;
         return;
     }
@@ -364,7 +400,8 @@ void renderScoreboard(const std::unordered_map<uint32_t, sPlayerDescription>& ma
 
     std::vector<std::pair<uint32_t, sPlayerDescription>> players(mapObjects.begin(), mapObjects.end());
     std::sort(players.begin(), players.end(), [](const auto& a, const auto& b) {
-        if (a.second.nOreCount == b.second.nOreCount) {
+        if (a.second.nOreCount == b.second.nOreCount)
+        {
             // Order by ID if ore count is the same
             return a.first < b.first;
         }
@@ -374,7 +411,8 @@ void renderScoreboard(const std::unordered_map<uint32_t, sPlayerDescription>& ma
 
     int displayCount = std::min(static_cast<int>(players.size()), 5);
 
-    for (int i = 0; i < displayCount; ++i) {
+    for (int i = 0; i < displayCount; ++i)
+    {
         const auto& player = players[i];
         SDL_Color playerColor = colorToSDLColor(player.second.nColor);
         SDL_Rect charRect = { scoreboardRect.x + 20, scoreboardRect.y + 20 + i * 40, BLOCK_SIZE, BLOCK_SIZE };
@@ -396,7 +434,8 @@ void renderScoreboard(const std::unordered_map<uint32_t, sPlayerDescription>& ma
     }
 }
 
-void render() {
+void render()
+{
     // Clear render
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
     SDL_RenderClear(renderer);
@@ -414,12 +453,14 @@ void render() {
     }
 
     // Render image if shop is open
-    if (shopOpen && shopImageTexture != NULL) {
+    if (shopOpen && shopImageTexture != NULL)
+    {
         SDL_RenderCopy(renderer, shopImageTexture, NULL, NULL);
     }
 
     // Render scoreboard if shop isn't open
-    if (!shopOpen && currentKeyStates[SDL_SCANCODE_TAB]) {
+    if (!shopOpen && currentKeyStates[SDL_SCANCODE_TAB])
+    {
         renderScoreboard(mapObjects);
     }
     SDL_RenderPresent(renderer);
@@ -427,7 +468,8 @@ void render() {
 #pragma endregion
 
 #pragma region Gameplay
-void waitForConnection() {
+void waitForConnection()
+{
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
     SDL_RenderClear(renderer);
     std::string waitingText = "Waiting for connection...";
@@ -437,10 +479,13 @@ void waitForConnection() {
     SDL_RenderPresent(renderer);
 }
 
-void handleEvents() {
+void handleEvents()
+{
     SDL_Event event;
-    while (SDL_PollEvent(&event) != 0) {
-        if (event.type == SDL_QUIT) {
+    while (SDL_PollEvent(&event) != 0)
+    {
+        if (event.type == SDL_QUIT)
+        {
             close();
             exit(0);
         }
@@ -450,77 +495,95 @@ void handleEvents() {
     playerRect = { (int)mapObjects[nPlayerID].vPos.x, (int)mapObjects[nPlayerID].vPos.y, BLOCK_SIZE, BLOCK_SIZE };
 }
 
-void shopLogic() {
+void shopLogic()
+{
     static bool keyPressed[6] = { false };
-    if (currentKeyStates[SDL_SCANCODE_SPACE] && !spacePressed) {
+    if (currentKeyStates[SDL_SCANCODE_SPACE] && !spacePressed)
+    {
         spacePressed = true;
 
-        if (shopOpen) {
+        if (shopOpen)
+        {
             // Close the shop if it's already open
             shopOpen = false;
             SDL_DestroyTexture(shopImageTexture);
             shopImageTexture = nullptr;
             Mix_PlayChannel(-1, shopCloseSound, 0);
         }
-        else {
+        else
+        {
             // Check if the player is touching the shop
-            if (AABB(playerRect, shopRect)) {
+            if (AABB(playerRect, shopRect))
+            {
                 shopOpen = true;
                 shopImageTexture = loadTexture(shopImagePath);
                 Mix_PlayChannel(-1, shopOpenSound, 0);
-                if (shopImageTexture == nullptr) {
+                if (shopImageTexture == nullptr)
+                {
                     std::cerr << "Failed to load shop image!" << std::endl;
                     shopOpen = false;
                 }
             }
         }
     }
-    else if (!currentKeyStates[SDL_SCANCODE_SPACE]) {
+    else if (!currentKeyStates[SDL_SCANCODE_SPACE])
+    {
         spacePressed = false;
     }
 
-    if (shopOpen) {
+    if (shopOpen)
+    {
         int randomSoundIndex = rand() % 3;
         Mix_Chunk* haggleSounds[3] = { haggleSound1, haggleSound2, haggleSound3 };
 
-        for (int i = 1; i <= SHOP_SPEEDS.size(); ++i) {
+        for (int i = 1; i <= SHOP_SPEEDS.size(); ++i)
+        {
             SDL_Scancode keyCode = static_cast<SDL_Scancode>(SDL_SCANCODE_1 + i - 1);
-            if (currentKeyStates[keyCode]) {
-                if (!keyPressed[i]) {
+            if (currentKeyStates[keyCode])
+            {
+                if (!keyPressed[i])
+                {
                     keyPressed[i] = true;
                     float speed = SHOP_SPEEDS.at(i);
                     int cost = SHOP_COSTS.at(i);
-                    if (mapObjects[nPlayerID].fMiningSpeed < speed && mapObjects[nPlayerID].nOreCount >= cost) {
+                    if (mapObjects[nPlayerID].fMiningSpeed < speed && mapObjects[nPlayerID].nOreCount >= cost)
+                    {
                         mapObjects[nPlayerID].fMiningSpeed = speed;
                         mapObjects[nPlayerID].nOreCount -= cost;
                         Mix_PlayChannel(-1, levelupSound, 0);
                     }
-                    else {
+                    else
+                    {
                         Mix_PlayChannel(-1, haggleSounds[randomSoundIndex], 0);
                     }
                 }
             }
-            else {
+            else
+            {
                 keyPressed[i] = false;
             }
         }
     }
 }
 
-void rockMining(float deltaTime) {
+void rockMining(float deltaTime)
+{
     static bool isMining = false;
     static float accumulatedTime = 0.0f;
 
-    if (currentKeyStates[SDL_SCANCODE_SPACE] && AABB(playerRect, rockRect)) {
+    if (currentKeyStates[SDL_SCANCODE_SPACE] && AABB(playerRect, rockRect))
+    {
         accumulatedTime += deltaTime;
 
-        if (!isMining) {
+        if (!isMining)
+        {
             // Start playing the mining sound
             Mix_PlayChannel(-1, miningSound, 0);
             isMining = true;
         }
 
-        if (accumulatedTime >= (1.0f / mapObjects[nPlayerID].fMiningSpeed)) {
+        if (accumulatedTime >= (1.0f / mapObjects[nPlayerID].fMiningSpeed))
+        {
             mapObjects[nPlayerID].nOreCount++;
             accumulatedTime -= (1.0f / mapObjects[nPlayerID].fMiningSpeed);
 
@@ -536,8 +599,10 @@ void rockMining(float deltaTime) {
             Mix_PlayChannel(-1, miningSound, 0);
         }
     }
-    else {
-        if (isMining) {
+    else
+    {
+        if (isMining)
+        {
             // Stop the mining sound when not mining
             Mix_HaltChannel(-1);
             isMining = false;
@@ -547,43 +612,43 @@ void rockMining(float deltaTime) {
     }
 }
 
-void playerMovement() {
+void playerMovement()
+{
     mapObjects[nPlayerID].vVel = { 0.0f, 0.0f };
 
-    if (currentKeyStates[SDL_SCANCODE_W] && !shopOpen) {
+    if (currentKeyStates[SDL_SCANCODE_W] && !shopOpen)
         mapObjects[nPlayerID].vVel += { 0.0f, -200.0f };
-    }
-    if (currentKeyStates[SDL_SCANCODE_S] && !shopOpen) {
+
+    if (currentKeyStates[SDL_SCANCODE_S] && !shopOpen)
         mapObjects[nPlayerID].vVel += { 0.0f, +200.0f };
-    }
-    if (currentKeyStates[SDL_SCANCODE_A] && !shopOpen) {
+
+    if (currentKeyStates[SDL_SCANCODE_A] && !shopOpen)
         mapObjects[nPlayerID].vVel += { -200.0f, 0.0f };
-    }
-    if (currentKeyStates[SDL_SCANCODE_D] && !shopOpen) {
+
+    if (currentKeyStates[SDL_SCANCODE_D] && !shopOpen)
         mapObjects[nPlayerID].vVel += { +200.0f, 0.0f };
-    }
 
     if (mapObjects[nPlayerID].vVel.mag2() > 0)
         mapObjects[nPlayerID].vVel = mapObjects[nPlayerID].vVel.norm() * 200.0f;
 }
 
-void updateClientObjects(float deltaTime) {
+void updateClientObjects(float deltaTime)
+{
     for (auto& object : mapObjects)
     {
         sVector2 vPotentialPosition = object.second.vPos + object.second.vVel * deltaTime;
 
-        if (vPotentialPosition.x < BLOCK_SIZE) {
+        if (vPotentialPosition.x < BLOCK_SIZE)
             vPotentialPosition.x = BLOCK_SIZE;
-        }
-        if (vPotentialPosition.x > WINDOW_WIDTH - BLOCK_SIZE - PLAYER_SIZE) {
+
+        if (vPotentialPosition.x > WINDOW_WIDTH - BLOCK_SIZE - PLAYER_SIZE)
             vPotentialPosition.x = WINDOW_WIDTH - BLOCK_SIZE - PLAYER_SIZE;
-        }
-        if (vPotentialPosition.y < BLOCK_SIZE) {
+
+        if (vPotentialPosition.y < BLOCK_SIZE)
             vPotentialPosition.y = BLOCK_SIZE;
-        }
-        if (vPotentialPosition.y > WINDOW_HEIGHT - BLOCK_SIZE - PLAYER_SIZE) {
+
+        if (vPotentialPosition.y > WINDOW_HEIGHT - BLOCK_SIZE - PLAYER_SIZE)
             vPotentialPosition.y = WINDOW_HEIGHT - BLOCK_SIZE - PLAYER_SIZE;
-        }
 
         // Shop and rock collision detection
         SDL_Rect shopRect = { 70, 30, 100, 20 };

@@ -1,13 +1,17 @@
 #pragma once
 #include "common.h"
 
+/// <summary>
+/// Copyright 2018 - 2021 OneLoneCoder.com
+/// Implements a thread-safe queue using locks for inter-thread communication.
+/// Provides methods for pushing, popping, and accessing items in the queue.
+/// Includes a condition variable to avoid busy-waiting when the queue is empty.
+/// </summary>
+
 namespace tfg
 {
 	namespace net
 	{
-		// We are going to implement the thread safe queue using locks. There are lock-free
-		// ts queues out there, but this way it is simpler.
-
 		template<typename T>
 		class tsqueue
 		{
@@ -17,64 +21,64 @@ namespace tfg
 			virtual ~tsqueue() { clear(); }
 
 		public:
-			// Returns and maintains item at front of queue
+			// Return and maintain item at front of queue
 			const T& front()
 			{
 				std::lock_guard<std::mutex> lock(muxQueue);
 				return deqQueue.front();
 			}
 
-			// Returns and maintains item at back of queue
+			// Return and maintain item at back of queue
 			const T& back()
 			{
 				std::lock_guard<std::mutex> lock(muxQueue);
 				return deqQueue.back();
 			}
 
-			// Adds an item to back of queue
+			// Add an item to the back of queue
 			void push_back(const T& item)
 			{
 				std::lock_guard<std::mutex> lock(muxQueue);
 				deqQueue.emplace_back(std::move(item));
 
-				// We've added an item to the queue, signal the condition variable to wake up
+				// Notify the condition variable
 				std::unique_lock<std::mutex> ul(muxBlocking);
 				cvBlocking.notify_one();
 			}
 
-			// Adds an item to back of queue
+			// Add an item to back of queue
 			void push_front(const T& item)
 			{
 				std::lock_guard<std::mutex> lock(muxQueue);
 				deqQueue.emplace_front(std::move(item));
 
-				// We've added an item to the queue, signal the condition variable to wake up
+				// Notify the condition variable
 				std::unique_lock<std::mutex> ul(muxBlocking);
 				cvBlocking.notify_one();
 			}
 
-			// Returns true if queue has no items
+			// Return true if queue is empty
 			bool empty()
 			{
 				std::lock_guard<std::mutex> lock(muxQueue);
 				return deqQueue.empty();
 			}
 
-			// Returns number of items in queue
+			// Return number of items in queue
 			size_t count()
 			{
 				std::lock_guard<std::mutex> lock(muxQueue);
 				return deqQueue.size();
 			}
 
-			// Clears queue
+			// Clear queue
 			void clear()
 			{
 				std::lock_guard<std::mutex> lock(muxQueue);
 				deqQueue.clear();
 			}
 
-			// Removes and returns item at front of queue
+			// Remove and return item at front of queue
 			T pop_front()
 			{
 				std::lock_guard<std::mutex> lock(muxQueue);
@@ -83,7 +87,7 @@ namespace tfg
 				return t;
 			}
 
-			// Removes and returns item from back of queue
+			// Remove and return item at back of queue
 			T pop_back()
 			{
 				std::lock_guard<std::mutex> lock(muxQueue);
@@ -92,16 +96,14 @@ namespace tfg
 				return t;
 			}
 
-			// Prevent idling at a 100% CPU by sleeping the threads until an item has been written to the queue.
+			/// Prevents the threads from idling at 100% CPU usage by putting them to sleep until an item is written to the queue.
+			/// If the queue is empty, locks the calling process. Wake-up signals include calls to push_back and push_front,
+			/// the only methods to insert items into the queue, along with notify_one, and spurious wake-up,
+			/// a phenomenon particularly on Windows, where the condition variable wakes up erroneously.
+			/// However, this is handled by looping back to check the state of the empty flag before going back to sleep.
+
 			void wait()
 			{
-				// If the queue is empty, lock the calling process
-				// Only two things can signal our condition variable to wake up:
-				// 1) Our calls at push_back and push_front with notify_one, which are the only way our queue object has to insert items into the queue
-				// 2) A phenomena called spurious wake up, notorious on Windows.
-				//	this phenomena makes it so that the condition var will sometimes erroneously wake up
-				// but the way this is set uo it will go back around to the while loop, check the state of
-				// the empty flag and continue, at which point it will go back to sleep
 				while (empty())
 				{
 					std::unique_lock<std::mutex> ul(muxBlocking);
