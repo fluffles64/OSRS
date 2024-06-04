@@ -17,11 +17,12 @@ OSRS is a simple game written in C++ designed to implement a custom networking f
 
 ## Requirements
 
-- C++17 or later
-- [SDL2](https://github.com/libsdl-org/SDL/releases)
-- [SDL2_image](https://github.com/libsdl-org/SDL_image/releases)
-- [SDL2_ttf](https://github.com/libsdl-org/SDL_ttf/releases)
-- [ASIO](https://think-async.com/Asio/)
+- **C++**: 17 or later
+- **SDL2**: [v2.30.3](https://github.com/libsdl-org/SDL/releases)
+- **SDL2_image**: [v2.8.2](https://github.com/libsdl-org/SDL_image/releases)
+- **SDL2_ttf**: [v2.22.0](https://github.com/libsdl-org/SDL_ttf/releases)
+- **SDL2_mixer**: [v2.8.0](https://github.com/libsdl-org/SDL_mixer/releases)
+- **ASIO**: [non-Boost](https://think-async.com/Asio/)
 
 ## Controls
 
