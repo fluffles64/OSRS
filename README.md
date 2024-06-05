@@ -95,7 +95,7 @@ The idea of the game is straightforward. You play as a dwarf in an ore quarry wi
         ./client
         ```
 
-    *Disclaimer*: The media folder in the source doesn't include fonts and sound effects, as they might contain copyrighted material.
+*Disclaimer*: The media folder in the source doesn't include fonts and sound effects, as they might contain copyrighted material.
 
 ## Contributing
 
